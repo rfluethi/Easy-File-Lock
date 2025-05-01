@@ -1,0 +1,20 @@
+# -------------------------------
+# .htaccess  (protected folder)
+# -------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /protected/
+
+  # block direct access to serving script
+  RewriteRule ^check-access\.php$ - [F,L]
+
+  # directory request => index.html
+  RewriteRule ^(.+/)$ /protected/check-access.php?file=$1index.html [QSA,L]
+
+  # send every file to PHP gatekeeper
+  RewriteRule ^(.+)$ /protected/check-access.php?file=$1 [QSA,L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set Cache-Control "private, no-cache, no-store, must-revalidate"
+</IfModule>

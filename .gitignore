@@ -1,0 +1,24 @@
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+*.log
+error_log
+access_log
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Cache and temporary files
+*.cache
+*.tmp
+*.temp
