@@ -1,36 +1,119 @@
-# Website Access Control
+# Website Access Control Basic
 
-Ein minimalistische Version um Dateien nur für bestimmte WordPress-Benutzergruppen zugänglich zu machen
+Ein sicheres System zum Verwalten und Ausliefern geschützter Dateien in WordPress.
 
 ## Schnellstart
 
-
-## Was dieses Plugin kann
-
-- **Dateizugriff schützen**: Dateien werden ausserhalb des Web-Roots gespeichert
-- **Rollenbasierter Zugriff**: WordPress-Benutzerrollen steuern den Zugriff
-
-## Was dieses Plugin NICHT kann
-
-- Dateien hochladen (muss manuell oder über ein separates System erfolgen)
-- Dateien bearbeiten oder löschen
-- Automatische Backups erstellen
-- Dateien komprimieren oder konvertieren
-
-## Systemanforderungen
-
-- PHP 7.4 oder höher
-- WordPress 5.0 oder höher
-- Apache mit mod_rewrite
+1. [Installation durchführen](docs/installation.md)
+2. [Konfiguration anpassen](docs/configuration.md)
+3. Geschützte Dateien in den `secure-files` Ordner kopieren
+4. Zugriff über `/protected/` testen
 
 ## Dokumentation
 
-- [Technische Details](docs/technical.md): Architektur und Sicherheit (Orginal Dokumenation)
+Die vollständige Dokumentation findest du im `docs/` Verzeichnis:
 
+- [Übersicht](docs/README.md) - Allgemeine Informationen
+- [Installation](docs/installation.md) - Schritt-für-Schritt-Anleitung
+- [Konfiguration](docs/configuration.md) - Einstellungsmöglichkeiten
+- [Technische Details](docs/technical.md) - Funktionsweise
+- [Fehlerbehebung](docs/troubleshooting.md) - Lösungen für Probleme
+- [Sicherheit](docs/security.md) - Sicherheitshinweise
 
-## Support
+## Systemanforderungen
 
+- WordPress 5.0 oder höher
+- PHP 7.4 oder höher
+- Apache 2.4 oder höher
+- mod_rewrite aktiviert
+- PHP-Extensionen:
+  - fileinfo
+  - mbstring
+  - openssl
+
+## Sicherheit
+
+Das System bietet mehrschichtige Sicherheit:
+
+1. **Dateisystem-Ebene**
+   - Dateien außerhalb des Web-Roots
+   - Strikte Berechtigungen
+   - Keine direkte URL-Zugänglichkeit
+
+2. **Webserver-Ebene**
+   - `.htaccess`-Schutz
+   - PHP-Ausführung verhindert
+   - Weiterleitung an `check-access.php`
+
+3. **Anwendungs-Ebene**
+   - WordPress-Authentifizierung
+   - Rollenbasierte Zugriffskontrolle
+   - Session-Management
+
+## Features
+
+- **Sicherer Speicherort**: Dateien außerhalb des WebRoots
+- **Rollenbasierter Zugriff**: Nur berechtigte Benutzer
+- **Flexible Konfiguration**: Einfache Anpassung
+- **Effizientes Streaming**: Optimierte Übertragung
+- **Performance-Tuning**: Anpassbare Chunk-Größen
+- **Debugging-Tools**: Umfangreiche Logging-Optionen
+
+## Installation
+
+1. Repository klonen:
+   ```bash
+   git clone https://github.com/your-username/Website-Access-Control-Basic.git
+   ```
+
+2. Dateien hochladen:
+   - `protected/` in `public_html/` kopieren
+   - `secure-files/` außerhalb des WebRoots anlegen
+
+3. WordPress konfigurieren:
+   ```php
+   define( 'SECURE_FILE_PATH', dirname( dirname( ABSPATH ) ) . '/secure-files' );
+   ```
+
+## Konfiguration
+
+Die Konfiguration erfolgt in `secure-config.php`:
+
+```php
+$role_folders = [
+    'seminar-website-basis' => 's-wsb',
+    'cv-interessent'        => 'secure-docs'
+];
+```
+
+## Bekannte Probleme
+
+- Große Dateien (>100MB) können bei einigen Hosting-Anbietern zu Timeouts führen
+- Einige Hosting-Anbieter erlauben keinen Zugriff außerhalb des WebRoots
+- Manche PHP-Konfigurationen limitieren die maximale Dateigröße
+
+## Changelog
+
+### Version 1.0.0
+- Erste stabile Version
+- Grundlegende Funktionalität implementiert
+- Dokumentation erstellt
+
+## Beitragen
+
+1. Fork erstellen
+2. Feature-Branch erstellen (`git checkout -b feature/AmazingFeature`)
+3. Änderungen committen (`git commit -m 'Add some AmazingFeature'`)
+4. Branch pushen (`git push origin feature/AmazingFeature`)
+5. Pull Request erstellen
 
 ## Lizenz
 
-MIT License - Siehe [LICENSE](LICENSE) für Details
+Dieses Projekt ist unter der MIT-Lizenz lizenziert. Siehe [LICENSE](LICENSE) für Details.
+
+## Support
+
+Bei Fragen oder Problemen:
+1. Prüfe die [Fehlerbehebung](docs/troubleshooting.md)
+2. Konsultiere die [technische Dokumentation](docs/technical.md)
+3. Stelle sicher, dass alle [Sicherheitshinweise](docs/security.md) beachtet wurden
