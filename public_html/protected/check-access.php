@@ -7,7 +7,7 @@
 
 // WordPress laden
 define('WP_USE_THEMES', false);
-require_once dirname(__DIR__) . '/main/wp-load.php';
+require_once dirname(__DIR__) . '/wordpress/wp-load.php';
 
 // Konfiguration laden
 require_once SECURE_FILE_PATH . '/config/secure-config.php';

@@ -3,8 +3,18 @@
  * check-access.php  —  role-aware download gate
  */
 
+// WordPress laden
 define('WP_USE_THEMES', false);         // skip WP theme bootstrap
-require_once dirname(__DIR__) . '/main/wp-load.php';    // load WordPress core
+require_once WP_CORE_PATH;               // load WordPress core
+
+// Konfiguration laden
+require_once SECURE_FILE_PATH . '/config/secure-config.php';
+
+// Debug-Modus
+if (DEBUG_MODE) {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+}
 
 // vault root (fallback if constant missing)
 if (!defined('SECURE_FILE_PATH')) {
@@ -16,6 +26,9 @@ $role_folders = require SECURE_FILE_PATH . '/config/secure-config.php';
 
 // only logged-in users
 if (!is_user_logged_in()) {
+    if (DEBUG_MODE) {
+        error_log('Benutzer nicht eingeloggt');
+    }
     auth_redirect();
     exit;
 }
@@ -32,6 +45,9 @@ $current = wp_get_current_user();
 $roles = $current->roles;
 $allowed = false;
 foreach ($roles as $role) {
+    if (DEBUG_MODE) {
+        error_log("Prüfe Rolle: $role");
+    }
     if ($role === 'administrator') {
         $allowed = true;
         break;
@@ -44,6 +60,10 @@ foreach ($roles as $role) {
     }
 }
 if (!$allowed) {
+    if (DEBUG_MODE) {
+        error_log("Zugriff verweigert für: $rel");
+        error_log("Benutzer-Rollen: " . implode(', ', $roles));
+    }
     status_header(403);
     exit('Forbidden');
 }
@@ -55,42 +75,74 @@ if (
     !is_file($abs) ||
     strncmp($abs, SECURE_FILE_PATH, strlen(SECURE_FILE_PATH)) !== 0
 ) {
+    if (DEBUG_MODE) {
+        error_log("Datei nicht gefunden: $rel");
+        error_log("Absoluter Pfad: $abs");
+    }
     status_header(404);
     exit('not found');
 }
 
 // MIME + headers
 $ext = strtolower(pathinfo($abs, PATHINFO_EXTENSION));
-$mime = [
-    'html' => 'text/html',
-    'pdf'  => 'application/pdf',
-    'css'  => 'text/css',
-    'js'   => 'application/javascript',
-    'png'  => 'image/png',
-    'jpg'  => 'image/jpeg',
-    'jpeg' => 'image/jpeg',
-    'gif'  => 'image/gif',
-    'svg'  => 'image/svg+xml',
-    'webp' => 'image/webp'
-][$ext] ?? 'application/octet-stream';
+$mime = $allowed_mime_types[$ext] ?? 'application/octet-stream';
 
+// Basis-Header
 header("Content-Type: $mime");
-header('X-Content-Type-Options: nosniff');
+header('Cache-Control: ' . CACHE_CONTROL);
+
+// Sicherheits-Header
+foreach (SECURITY_HEADERS as $header) {
+    header($header);
+}
+
 $size = filesize($abs);
 header("Content-Length: $size");
 
+// Debug-Logging
+if (DEBUG_MODE) {
+    error_log(sprintf(
+        "Datei-Transfer: %s (%s, %d Bytes)",
+        $rel,
+        $mime,
+        $size
+    ));
+}
+
 // send file (chunked for large payloads)
-if ($size > 524288) {                // > 512 kB
+if ($size > MAX_DIRECT_DOWNLOAD_SIZE) {
+    if (DEBUG_MODE) {
+        error_log("Starte Chunked Download");
+    }
     @set_time_limit(0);
     while (ob_get_level())
         ob_end_flush();
     $fp = fopen($abs, 'rb');
     if ($fp) {
+        $chunks = 0;
+        $total = 0;
         while (!feof($fp)) {
-            echo fread($fp, 1048576);
+            $data = fread($fp, CHUNK_SIZE);
+            echo $data;
             flush();
+            $chunks++;
+            $total += strlen($data);
+            if (DEBUG_MODE && $chunks % 10 === 0) {
+                error_log(sprintf(
+                    "Chunk %d: %d Bytes übertragen",
+                    $chunks,
+                    $total
+                ));
+            }
         }
         fclose($fp);
+        if (DEBUG_MODE) {
+            error_log(sprintf(
+                "Download abgeschlossen: %d Chunks, %d Bytes",
+                $chunks,
+                $total
+            ));
+        }
     }
     exit;
 }

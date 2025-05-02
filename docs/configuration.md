@@ -10,8 +10,8 @@ Definiere in `secure-config.php` die Zuordnung von WordPress-Rollen zu Ordnern:
 
 ```php
 $role_folders = [
-    'seminar-website-basis' => 's-wsb',
-    'cv-interessent'        => 'secure-docs'
+    'subscriber' => 'group-1',    // seminar-website-basis
+    'contributor' => 'group-2'    // cv-interessent
 ];
 ```
 

@@ -18,15 +18,15 @@ Hier findest du Lösungen für häufige Probleme und Fehlermeldungen.
 **Lösungen:**
 1. Prüfe die URL-Struktur:
    ```
-   https://deine-domain.tld/protected/s-wsb/de/docs/index.html
+   https://deine-domain.tld/protected/group-1/index.html
    ```
 2. Stelle sicher, dass die Datei im richtigen Ordner liegt:
    ```
-   /secure-files/s-wsb/de/docs/index.html
+   /secure-files/group-1/index.html
    ```
 3. Überprüfe die `wp-config.php`:
    ```php
-   define( 'SECURE_FILE_PATH', dirname( dirname( ABSPATH ) ) . '/secure-files' );
+   define('SECURE_FILE_PATH', dirname(dirname(ABSPATH)) . '/secure-files');
    ```
 
 ### 403 - Zugriff verweigert
@@ -45,11 +45,15 @@ Hier findest du Lösungen für häufige Probleme und Fehlermeldungen.
 2. Überprüfe die Rollen-Konfiguration:
    ```php
    $role_folders = [
-       'seminar-website-basis' => 's-wsb',
-       'cv-interessent'        => 'secure-docs'
+       'subscriber' => 'group-1',    // seminar-website-basis
+       'contributor' => 'group-2'    // cv-interessent
    ];
    ```
-3. Stelle sicher, dass die Datei im richtigen Ordner liegt
+3. Stelle sicher, dass die Datei im richtigen Ordner liegt:
+   ```
+   /secure-files/group-1/index.html  # für subscriber
+   /secure-files/group-2/document.pdf # für contributor
+   ```
 
 ### Endlose Weiterleitung
 
@@ -66,7 +70,7 @@ Hier findest du Lösungen für häufige Probleme und Fehlermeldungen.
 1. Prüfe die Domain-Einstellungen in WordPress
 2. Überprüfe den Pfad in `check-access.php`:
    ```php
-   require_once dirname(__DIR__) . '/main/wp-load.php';
+   require_once WP_CORE_PATH;
    ```
 3. Lösche Browser-Cookies und Cache
 
@@ -86,11 +90,8 @@ Hier findest du Lösungen für häufige Probleme und Fehlermeldungen.
 **Lösungen:**
 1. Erhöhe die Chunk-Größe in `secure-config.php`:
    ```php
-   define('CHUNK_SIZE', 4194304); // 4 MB
-   ```
-2. Passe die maximale Download-Größe an:
-   ```php
-   define('MAX_DIRECT_DOWNLOAD_SIZE', 1048576); // 1 MB
+   define('CHUNK_SIZE', 4194304);              // 4 MB
+   define('MAX_DIRECT_DOWNLOAD_SIZE', 524288); // 512 KB
    ```
 
 ### Falsche MIME-Types
@@ -106,7 +107,12 @@ Hier findest du Lösungen für häufige Probleme und Fehlermeldungen.
 **Lösungen:**
 1. Füge den MIME-Type in `secure-config.php` hinzu:
    ```php
-   $allowed_mime_types['docx'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+   $allowed_mime_types = [
+       'html' => 'text/html',
+       'pdf'  => 'application/pdf',
+       // ... weitere MIME-Types ...
+       'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+   ];
    ```
 2. Prüfe die Dateiendung
 
@@ -152,9 +158,20 @@ Hier findest du Lösungen für häufige Probleme und Fehlermeldungen.
 2. Implementiere Download-Limits
 3. Prüfe Server-Ressourcen
 
----
+### Cache-Probleme
 
-Bei weiterhin bestehenden Problemen:
-1. Prüfe die Server-Logs
-2. Aktiviere den Debug-Modus
-3. Kontaktiere den Server-Administrator 
+**Symptome:**
+- Dateien werden im Browser gecacht
+- Änderungen sind nicht sofort sichtbar
+- Alte Versionen werden angezeigt
+
+**Mögliche Ursachen:**
+1. Browser-Cache nicht deaktiviert
+2. Cache-Header nicht korrekt gesetzt
+3. Proxy-Cache aktiv
+
+**Lösungen:**
+1. Überprüfe die Cache-Einstellungen in `secure-config.php`:
+   ```php
+   define('CACHE_CONTROL', 'private, no-cache, no-store, must-revalidate');
+   ```

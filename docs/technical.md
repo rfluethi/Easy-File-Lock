@@ -10,6 +10,7 @@
 6. [Performance-Optimierung](#performance-optimierung)
 7. [Fehlerbehandlung](#fehlerbehandlung)
 8. [Best Practices](#best-practices)
+9. [Debugging](#debugging)
 
 ## Überblick
 
@@ -42,11 +43,12 @@ Der Dateitresor ist ein sicheres System zum Verwalten und Ausliefern geschützte
 ## Dateisystem-Struktur
 
 ```
-/secure-files/          # Hauptordner (außerhalb des WebRoots)
+/secure-files/          # Hauptordner für geschützte Dateien (außerhalb des WebRoots)
 ├── config/            # Konfigurationsordner (755)
 │   └── secure-config.php  # Konfigurationsdatei (644)
 └── [role-folders]/    # Rollenordner (755)
-    └── [files]        # Geschützte Dateien (644)
+    ├── group-1/       # Verzeichnis für seminar-website-basis (subscriber)
+    └── group-2/       # Verzeichnis für cv-interessent (contributor)
 ```
 
 ### Berechtigungen
@@ -79,7 +81,7 @@ RewriteRule ^(.*)$ check-access.php?file=$1 [L,QSA]
 
 #### WordPress-Integration
 ```php
-require_once dirname(__DIR__) . '/main/wp-load.php';
+require_once WP_CORE_PATH;    // load WordPress core
 ```
 - Lädt WordPress-Umgebung
 - Stellt Authentifizierung bereit
@@ -110,6 +112,10 @@ if (!is_user_logged_in()) {
 ```php
 $user = wp_get_current_user();
 $role = $user->roles[0];
+$role_folders = [
+    'subscriber' => 'group-1',    // seminar-website-basis
+    'contributor' => 'group-2'    // cv-interessent
+];
 $role_folder = $role_folders[$role];
 ```
 - Holt Benutzerinformationen
@@ -160,6 +166,51 @@ fclose($fp);
 - Liest in Chunks
 - Verhindert Überlauf
 
+### 2. Konfigurationsdatei (secure-config.php)
+
+```php
+// WordPress-Pfad
+define('WP_CORE_PATH', dirname(__DIR__) . '/wordpress/wp-load.php');
+
+// Rollen und ihre zugehörigen Ordner
+$role_folders = [
+    'subscriber' => 'group-1',    // seminar-website-basis
+    'contributor' => 'group-2'    // cv-interessent
+];
+
+// Download-Einstellungen
+define('MAX_DIRECT_DOWNLOAD_SIZE', 524288);  // 512 KB
+define('CHUNK_SIZE', 1048576);              // 1 MB
+
+// Erlaubte Dateiendungen und ihre MIME-Types
+$allowed_mime_types = [
+    'html' => 'text/html',
+    'pdf'  => 'application/pdf',
+    'css'  => 'text/css',
+    'js'   => 'application/javascript',
+    'png'  => 'image/png',
+    'jpg'  => 'image/jpeg',
+    'jpeg' => 'image/jpeg',
+    'gif'  => 'image/gif',
+    'svg'  => 'image/svg+xml',
+    'webp' => 'image/webp'
+];
+
+// Cache-Einstellungen
+define('CACHE_CONTROL', 'private, no-cache, no-store, must-revalidate');
+
+// Debug-Modus (nur für Entwicklung!)
+define('DEBUG_MODE', false);
+```
+
+Die Konfigurationsdatei enthält alle wichtigen Einstellungen für den Dateitresor:
+- WordPress-Integration
+- Rollenbasierte Zugriffskontrolle
+- Download-Optimierungen
+- MIME-Type-Definitionen
+- Cache-Verhalten
+- Debugging-Optionen
+
 ## Sicherheitsmaßnahmen
 
 ### 1. Dateisystem
@@ -180,9 +231,9 @@ fclose($fp);
 ## Performance-Optimierung
 
 ### 1. Chunked Downloads
-- Optimale Chunk-Größe: 4 MB
-- Sofortiges Flushing
-- Speichereffizient
+- Optimale Chunk-Größe: 1 MB (1048576 Bytes)
+- Direkte Downloads bis 512 KB (524288 Bytes)
+- Sofortiges Flushing für große Dateien
 
 ### 2. Caching
 - Browser-Cache deaktiviert
@@ -228,6 +279,39 @@ fclose($fp);
 - Fehlerprotokolle
 - Performance-Metriken
 
+## Debugging
+
+### Debug-Modus
+
+Der Debug-Modus kann in der `secure-config.php` aktiviert werden:
+```php
+define('DEBUG_MODE', true);
+```
+
+Im Debug-Modus werden folgende Informationen protokolliert:
+- Authentifizierungsstatus
+- Benutzerrollen und Zugriffsprüfungen
+- Dateipfade und Zugriffsversuche
+- PHP-Fehler und Warnungen
+
+**Wichtig:**  
+Der Debug-Modus sollte nur in Entwicklungsumgebungen aktiviert werden!
+
+### Logging
+
+Debug-Informationen werden in die PHP-Fehlerprotokolle geschrieben:
+- Apache: `/var/log/apache2/error.log`
+- PHP: `/var/log/php/error.log`
+- WordPress: `wp-content/debug.log`
+
+### Fehlerbehandlung
+
+Im Debug-Modus werden detaillierte Fehlermeldungen angezeigt:
+- Authentifizierungsfehler
+- Zugriffsverweigerungen
+- Dateisystem-Fehler
+- PHP-Fehler
+
 ---
 
 ## Beispiel-Ablauf
@@ -244,6 +328,7 @@ sequenceDiagram
     participant F as Dateisystem
 
     B->>A: Anfrage geschützte Datei
+    Note over B: z.B. /protected/group-1/index.html
     A->>C: Weiterleitung via .htaccess
     
     C->>W: WordPress laden
@@ -268,6 +353,7 @@ sequenceDiagram
         C->>B: 404 Not Found
     else Erfolg
         C->>F: Datei öffnen
+        Note over F: /secure-files/group-1/index.html
         F-->>C: Datei-Handle
         
         loop Chunk-Streaming

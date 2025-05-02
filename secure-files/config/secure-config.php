@@ -6,15 +6,18 @@
  * Änderungen an der Funktionalität sollten hier vorgenommen werden.
  */
 
+// WordPress-Pfad
+define('WP_CORE_PATH', dirname(__DIR__) . '/wordpress/wp-load.php');
+
 // Rollen und ihre zugehörigen Ordner
 $role_folders = [
-    'seminar-website-basis' => 's-wsb',
-    'cv-interessent'        => 'secure-docs'
+    'subscriber' => 'group-1',    // seminar-website-basis
+    'contributor' => 'group-2'    // cv-interessent
 ];
 
 // Download-Einstellungen
-define('MAX_DIRECT_DOWNLOAD_SIZE', 524288);  // 512 KB
-define('CHUNK_SIZE', 1048576);              // 1 MB
+define('MAX_DIRECT_DOWNLOAD_SIZE', 1048576);  // 1 MB
+define('CHUNK_SIZE', 4194304);               // 4 MB
 
 // Erlaubte Dateiendungen und ihre MIME-Types
 $allowed_mime_types = [
@@ -27,11 +30,26 @@ $allowed_mime_types = [
     'jpeg' => 'image/jpeg',
     'gif'  => 'image/gif',
     'svg'  => 'image/svg+xml',
-    'webp' => 'image/webp'
+    'webp' => 'image/webp',
+    'doc'  => 'application/msword',
+    'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xls'  => 'application/vnd.ms-excel',
+    'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'ppt'  => 'application/vnd.ms-powerpoint',
+    'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
 ];
 
 // Cache-Einstellungen
 define('CACHE_CONTROL', 'private, no-cache, no-store, must-revalidate');
+
+// Sicherheits-Header
+define('SECURITY_HEADERS', [
+    'X-Content-Type-Options: nosniff',
+    'X-Frame-Options: DENY',
+    'X-XSS-Protection: 1; mode=block',
+    'Referrer-Policy: strict-origin-when-cross-origin',
+    'Content-Security-Policy: default-src \'self\''
+]);
 
 // Debug-Modus (nur für Entwicklung!)
 define('DEBUG_MODE', false); 

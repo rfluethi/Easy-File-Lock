@@ -1,10 +1,10 @@
 # Website Access Control Basic
 
-Ein sicheres System zum Verwalten und Ausliefern geschützter Dateien in WordPress.
+Ein Verwalten und Ausliefern geschützter Dateien in WordPress.
 
 ## Hintergrund
 
-Viele WordPress-Websites benötigen eine Möglichkeit, sensible Dateien (z. B. Kursunterlagen, interne Dokumente) sicher zu speichern und nur bestimmten Benutzergruppen zugänglich zu machen. Standard-WordPress-Mechanismen bieten keinen Schutz für Dateien außerhalb der Mediathek. Dieses Projekt entstand, um eine einfache, sichere und rollenbasierte Lösung für den Dateizugriff zu schaffen.
+Dieses Projekt bietet eine schlanke PHP-basierte Lösung, um Dateien in WordPress nur bestimmten Benutzergruppen zugänglich zu machen – ohne überladene Plugins. Die Anfrage wird über eine .htaccess-Regel an ein Prüfskript weitergeleitet, das die Berechtigungen kontrolliert und Dateien aus einem geschützten Verzeichnis bei Bedarf ausliefert. Die Konfiguration erfolgt zentral über eine PHP-Datei. Die Lösung ist bewusst einfach gehalten und kann flexibel an eigene Serverumgebungen angepasst werden.
 
 ## Schnellstart
 
