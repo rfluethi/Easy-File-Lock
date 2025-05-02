@@ -232,7 +232,83 @@ fclose($fp);
 
 ## Beispiel-Ablauf
 
-### Prozessdiagramm
+### Sequenzdiagramm
+
+```mermaid
+sequenceDiagram
+    participant B as Browser
+    participant A as Apache
+    participant C as check-access.php
+    participant W as WordPress
+    participant F as Dateisystem
+
+    B->>A: Anfrage geschützte Datei
+    A->>C: Weiterleitung via .htaccess
+    
+    C->>W: WordPress laden
+    W-->>C: WordPress-Umgebung
+    
+    C->>C: Benutzer eingeloggt?
+    alt Nicht eingeloggt
+        C->>B: Weiterleitung Login
+        B->>W: Login durchführen
+        W-->>B: Login erfolgreich
+        B->>A: Erneute Anfrage
+    end
+    
+    C->>C: Benutzerrolle prüfen
+    C->>C: Pfad validieren
+    
+    alt Ungültige Rolle
+        C->>B: 403 Forbidden
+    else Ungültiger Pfad
+        C->>B: 404 Not Found
+    else Datei nicht gefunden
+        C->>B: 404 Not Found
+    else Erfolg
+        C->>F: Datei öffnen
+        F-->>C: Datei-Handle
+        
+        loop Chunk-Streaming
+            C->>F: Chunk lesen
+            F-->>C: Daten
+            C->>B: Chunk senden
+        end
+        
+        C->>F: Datei schließen
+        C->>B: Download abgeschlossen
+    end
+```
+
+**Erklärung des Sequenzdiagramms:**
+Dieses Diagramm zeigt die zeitliche Abfolge der Interaktionen zwischen den verschiedenen Systemkomponenten:
+
+1. **Browser → Apache → check-access.php**
+   - Browser sendet Anfrage für geschützte Datei
+   - Apache leitet Anfrage an check-access.php weiter
+   - Weiterleitung erfolgt über .htaccess-Regeln
+
+2. **WordPress-Integration**
+   - check-access.php lädt WordPress-Umgebung
+   - Ermöglicht Zugriff auf WordPress-Funktionen
+   - Stellt Authentifizierung bereit
+
+3. **Authentifizierungsprozess**
+   - Prüfung des Login-Status
+   - Bei nicht eingeloggten Benutzern: Weiterleitung zum Login
+   - Nach erfolgreichem Login: Erneute Anfrage
+
+4. **Zugriffskontrolle**
+   - Prüfung der Benutzerrolle
+   - Validierung des Dateipfads
+   - Mögliche Fehlermeldungen (403/404)
+
+5. **Datei-Streaming**
+   - Öffnen der Datei im Dateisystem
+   - Chunk-weises Lesen und Senden
+   - Optimierte Übertragung großer Dateien
+
+### Flussdiagramm
 
 ```mermaid
 graph TD
@@ -253,7 +329,8 @@ graph TD
     style F fill:#fbb,stroke:#333,stroke-width:2px
 ```
 
-### Erklärung der Schritte
+**Erklärung des Flussdiagramms:**
+Dieses Diagramm zeigt die logische Abfolge der Entscheidungen und Prozesse:
 
 1. **Anfrage**
    - Benutzer fordert geschützte Datei an
@@ -270,6 +347,13 @@ graph TD
 4. **Ergebnis**
    - Erfolg: Datei wird gestreamt
    - Fehler: 403 (keine Berechtigung) oder 404 (Datei nicht gefunden)
+
+### Unterschiede der Diagramme
+
+- **Sequenzdiagramm**: Zeigt die zeitliche Abfolge und Interaktionen zwischen den Systemkomponenten
+- **Flussdiagramm**: Zeigt die logische Abfolge der Entscheidungen und Prozesse
+
+Beide Diagramme ergänzen sich und bieten unterschiedliche Perspektiven auf den gleichen Prozess.
 
 ### Sicherheitsaspekte
 
