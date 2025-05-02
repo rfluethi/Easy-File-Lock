@@ -235,6 +235,7 @@ fclose($fp);
 ### Sequenzdiagramm
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#4a9eff', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#4a9eff', 'lineColor': '#4a9eff', 'secondaryColor': '#2d2d2d', 'tertiaryColor': '#2d2d2d'}}}%%
 sequenceDiagram
     participant B as Browser
     participant A as Apache
