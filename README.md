@@ -2,6 +2,10 @@
 
 Ein sicheres System zum Verwalten und Ausliefern geschützter Dateien in WordPress.
 
+## Hintergrund
+
+Viele WordPress-Websites benötigen eine Möglichkeit, sensible Dateien (z. B. Kursunterlagen, interne Dokumente) sicher zu speichern und nur bestimmten Benutzergruppen zugänglich zu machen. Standard-WordPress-Mechanismen bieten keinen Schutz für Dateien außerhalb der Mediathek. Dieses Projekt entstand, um eine einfache, sichere und rollenbasierte Lösung für den Dateizugriff zu schaffen.
+
 ## Schnellstart
 
 1. [Installation durchführen](docs/installation.md)
@@ -19,6 +23,8 @@ Die vollständige Dokumentation findest du im `docs/` Verzeichnis:
 - [Technische Details](docs/technical.md) - Funktionsweise
 - [Fehlerbehebung](docs/troubleshooting.md) - Lösungen für Probleme
 - [Sicherheit](docs/security.md) - Sicherheitshinweise
+- [Ablaufdiagramm](docs/flow.md) - Prozessablauf
+- [Changelog](docs/changelog.md) - Versionshistorie
 
 ## Systemanforderungen
 
@@ -91,13 +97,6 @@ $role_folders = [
 - Große Dateien (>100MB) können bei einigen Hosting-Anbietern zu Timeouts führen
 - Einige Hosting-Anbieter erlauben keinen Zugriff außerhalb des WebRoots
 - Manche PHP-Konfigurationen limitieren die maximale Dateigröße
-
-## Changelog
-
-### Version 1.0.0
-- Erste stabile Version
-- Grundlegende Funktionalität implementiert
-- Dokumentation erstellt
 
 ## Beitragen
 
