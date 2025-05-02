@@ -15,6 +15,11 @@ $role_folders = [
 ];
 ```
 
+**Wichtige Hinweise:**
+- Die Rollen-Namen müssen exakt mit den WordPress-Rollen übereinstimmen
+- Die Ordner-Namen dürfen keine Leerzeichen oder Sonderzeichen enthalten
+- Jede Rolle kann nur einem Ordner zugeordnet werden
+
 ### 2. Erlaubte Dateitypen
 
 Konfiguriere die erlaubten MIME-Types:
@@ -39,31 +44,64 @@ $allowed_mime_types = [
 ];
 ```
 
-## Beispiel-Konfigurationen
+**Sicherheitshinweise:**
+- Füge nur MIME-Types hinzu, die wirklich benötigt werden
+- Aktiviere `STRICT_MIME_CHECK` für zusätzliche Sicherheit
+- Überprüfe regelmäßig die MIME-Type-Liste
 
-### 1. Basis-Konfiguration
+## Erweiterte Konfiguration
+
+### 1. Debug-Modus
+
 ```php
-// Debug-Modus deaktivieren
+// Debug-Modus aktivieren/deaktivieren
 define('DEBUG_MODE', false);
-
-// Standard-Chunk-Größe
-define('CHUNK_SIZE', 4194304); // 4 MB
-
-// Maximale Download-Größe
-define('MAX_DIRECT_DOWNLOAD_SIZE', 1048576); // 1 MB
 ```
 
-### 2. Performance-Optimierung
-```php
-// Erhöhte Chunk-Größe für schnelle Downloads
-define('CHUNK_SIZE', 8388608); // 8 MB
+**Auswirkungen:**
+- Aktiviert: Detaillierte Fehlermeldungen und Logging
+- Deaktiviert: Nur kritische Fehler werden angezeigt
+- Empfehlung: Im Produktivbetrieb deaktivieren
 
-// Cache-Header für statische Dateien
+### 2. Chunk-Größe
+
+```php
+// Standard-Chunk-Größe (4 MB)
+define('CHUNK_SIZE', 4194304);
+```
+
+**Auswirkungen:**
+- Größere Chunks: Schnellere Downloads, höherer Speicherverbrauch
+- Kleinere Chunks: Langsamere Downloads, geringerer Speicherverbrauch
+- Empfehlung: An Server-Ressourcen anpassen
+
+### 3. Maximale Download-Größe
+
+```php
+// Maximale direkte Download-Größe (1 MB)
+define('MAX_DIRECT_DOWNLOAD_SIZE', 1048576);
+```
+
+**Auswirkungen:**
+- Dateien über dieser Größe werden immer gestreamt
+- Verhindert Timeouts bei großen Dateien
+- Empfehlung: An Server-Konfiguration anpassen
+
+### 4. Caching
+
+```php
+// Cache aktivieren
 define('ENABLE_CACHE', true);
 define('CACHE_DURATION', 3600); // 1 Stunde
 ```
 
-### 3. Sicherheits-Konfiguration
+**Auswirkungen:**
+- Verbesserte Performance für statische Dateien
+- Reduzierte Server-Last
+- Empfehlung: Für statische Inhalte aktivieren
+
+### 5. Sicherheitseinstellungen
+
 ```php
 // Strikte MIME-Type-Validierung
 define('STRICT_MIME_CHECK', true);
@@ -75,11 +113,16 @@ define('ADD_SECURITY_HEADERS', true);
 define('ENABLE_LOGGING', true);
 ```
 
-## Performance-Tuning
+**Auswirkungen:**
+- `STRICT_MIME_CHECK`: Verhindert MIME-Type-Spoofing
+- `ADD_SECURITY_HEADERS`: Verbesserte Browser-Sicherheit
+- `ENABLE_LOGGING`: Detaillierte Zugriffsprotokolle
+
+## Performance-Optimierung
 
 ### 1. Chunk-Größe optimieren
 
-Die Chunk-Größe beeinflusst die Download-Geschwindigkeit:
+Die optimale Chunk-Größe hängt von verschiedenen Faktoren ab:
 
 ```php
 // Kleine Dateien (bis 1 MB)
@@ -92,79 +135,23 @@ define('CHUNK_SIZE', 4194304); // 4 MB
 define('CHUNK_SIZE', 8388608); // 8 MB
 ```
 
-### 2. Caching konfigurieren
+**Empfehlungen:**
+- Teste verschiedene Chunk-Größen
+- Überwache Server-Last
+- Passe an typische Dateigrößen an
 
-Für statische Dateien kann Caching aktiviert werden:
+### 2. Caching-Strategien
 
 ```php
-// Cache aktivieren
-define('ENABLE_CACHE', true);
-
-// Cache-Dauer in Sekunden
-define('CACHE_DURATION', 3600); // 1 Stunde
-
-// Cache-Header
+// Cache-Header für statische Dateien
 header('Cache-Control: public, max-age=' . CACHE_DURATION);
 header('Expires: ' . gmdate('D, d M Y H:i:s', time() + CACHE_DURATION) . ' GMT');
 ```
 
-### 3. Ressourcen-Optimierung
-
-```php
-// PHP-Speicherlimit anpassen
-ini_set('memory_limit', '256M');
-
-// Maximale Ausführungszeit
-set_time_limit(300); // 5 Minuten
-
-// Output-Buffering
-ob_start();
-```
-
-## Debugging-Optionen
-
-### 1. Debug-Modus
-
-```php
-// Debug-Modus aktivieren
-define('DEBUG_MODE', true);
-
-// Debug-Logging
-if (DEBUG_MODE) {
-    error_log('Datei: ' . $requested_file);
-    error_log('Benutzer: ' . $user->user_login);
-    error_log('Rolle: ' . $role);
-}
-```
-
-### 2. Fehlerprotokollierung
-
-```php
-// Detaillierte Fehlerprotokolle
-define('LOG_LEVEL', 'DEBUG'); // DEBUG, INFO, WARNING, ERROR
-
-// Log-Funktion
-function log_message($level, $message) {
-    if (LOG_LEVEL === 'DEBUG' || $level === 'ERROR') {
-        error_log("[$level] $message");
-    }
-}
-```
-
-### 3. Performance-Monitoring
-
-```php
-// Performance-Metriken
-define('ENABLE_PERFORMANCE_MONITORING', true);
-
-// Timing-Funktion
-function log_performance($operation, $start_time) {
-    if (ENABLE_PERFORMANCE_MONITORING) {
-        $duration = microtime(true) - $start_time;
-        error_log("Performance: $operation took {$duration}s");
-    }
-}
-```
+**Empfehlungen:**
+- Lange Cache-Dauer für statische Inhalte
+- Kurze Cache-Dauer für dynamische Inhalte
+- Cache-Busting für Updates
 
 ## Best Practices
 
@@ -172,15 +159,18 @@ function log_performance($operation, $start_time) {
 - Aktiviere `STRICT_MIME_CHECK`
 - Setze `ADD_SECURITY_HEADERS`
 - Aktiviere `ENABLE_LOGGING`
+- Regelmäßige Überprüfung der Logs
 
 ### 2. Performance
 - Optimiere `CHUNK_SIZE`
 - Aktiviere Caching für statische Dateien
 - Überwache Performance-Metriken
+- Regelmäßige Performance-Tests
 
 ### 3. Wartung
 - Regelmäßige Log-Analyse
 - Performance-Monitoring
 - Sicherheits-Updates
+- Backup-Strategie
 
 Mit diesen Schritten ist die Konfiguration abgeschlossen. Weiter geht es mit der Installation! 

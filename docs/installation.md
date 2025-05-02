@@ -1,5 +1,21 @@
 # Installation des Dateitresors
 
+## Schnellstart Installation
+
+1. Repository klonen:
+   ```bash
+   git clone https://github.com/your-username/Website-Access-Control-Basic.git
+   ```
+
+2. Dateien hochladen:
+   - `protected/` in `public_html/` kopieren
+   - `secure-files/` außerhalb des WebRoots anlegen
+
+3. WordPress konfigurieren:
+   ```php
+   define( 'SECURE_FILE_PATH', dirname( dirname( ABSPATH ) ) . '/secure-files' );
+   ```
+
 ## Systemvoraussetzungen
 
 ### Server-Anforderungen
@@ -76,25 +92,6 @@ define( 'SECURE_FILE_PATH', dirname( ABSPATH ) . '/secure-files' );
 3. Du solltest das Login-Formular sehen. Nach dem Einloggen erscheint die geheime Datei.
 
 **Glückwunsch, dein Tresor funktioniert!**
-
-## Upgrade von älteren Versionen
-
-### Vor dem Upgrade
-1. Backup erstellen:
-   - `secure-files` Ordner sichern
-   - `protected` Ordner sichern
-   - WordPress-Datenbank sichern
-
-### Upgrade durchführen
-1. Neue Version herunterladen
-2. `protected` Ordner aktualisieren
-3. Konfiguration prüfen
-4. Test durchführen
-
-### Nach dem Upgrade
-1. Logs prüfen
-2. Zugriffe testen
-3. Performance überwachen
 
 ## Deinstallation
 
