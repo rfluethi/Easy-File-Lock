@@ -1,196 +1,140 @@
-# Konfiguration des Dateitresors
+# Konfigurationsdokumentation
 
-In diesem Abschnitt erfährst du, wie du den Dateitresor für deine WordPress-Installation korrekt konfigurierst.
+## 1. WordPress-Pfad
 
-## 1. Rollenzuordnungen
-
-Die Rollenzuordnungen definieren, welche Benutzerrolle auf welches Verzeichnis zugreifen kann:
-
+### 1.1 Standard-Konfiguration
 ```php
-$role_mappings = [
+// Wenn WordPress in einem Unterverzeichnis des WebRoots liegt (z.B. /main/)
+define('WP_CORE_PATH', dirname(__DIR__, 2) . '/main/wp-load.php');
+
+// Wenn WordPress direkt im WebRoot liegt
+define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');
+```
+
+### 1.2 Pfadberechnung
+- `dirname(__DIR__, 2)` geht zwei Verzeichnisse hoch
+- Bei WordPress in einem Unterverzeichnis:
+  - Start: `/path/to/secure-files/config/`
+  - Nach `dirname(__DIR__, 2)`: `/path/to/`
+  - Final: `/path/to/main/wp-load.php`
+
+**Hinweis:**  
+- Der Pfad muss zum tatsächlichen Standort von WordPress passen
+- Der Name des WebRoot-Verzeichnisses spielt keine Rolle
+- Wichtig ist nur der relative Pfad von `secure-files` zu WordPress
+
+## 2. Rollenzuordnung
+
+### 2.1 Standard-Konfiguration
+```php
+$role_folders = [
     'subscriber' => 'group-1',    // Zugriff auf example-1.pdf
     'contributor' => 'group-2'    // Zugriff auf example-2.pdf
 ];
 ```
 
-## 2. Verzeichnisstruktur
-
-Die geschützten Dateien werden in den entsprechenden Gruppenverzeichnissen gespeichert:
-
-```
-secure-files/
-├── config/
-│   └── secure-config.php
-├── group-1/
-│   ├── example-1.pdf    # Beispiel für Subscriber-Zugriff
-│   └── [weitere Dateien für Subscriber]
-└── group-2/
-    ├── example-2.pdf    # Beispiel für Contributor-Zugriff
-    └── [weitere Dateien für Contributor]
-```
-
-## 3. Beispiel-URLs
-
-Die geschützten Dateien sind über folgende URLs erreichbar:
-
-```
-https://deine-domain.tld/protected/group-1/example-1.pdf  # für Subscriber
-https://deine-domain.tld/protected/group-2/example-2.pdf  # für Contributor
-```
-
-## Grundlegende Konfiguration
-
-### 1. Erlaubte Dateitypen
-
-Konfiguriere die erlaubten MIME-Types:
-
+### 2.2 Eigene Rollen hinzufügen
 ```php
-$allowed_mime_types = [
-    'pdf'  => 'application/pdf',
-    'doc'  => 'application/msword',
-    'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'xls'  => 'application/vnd.ms-excel',
-    'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'ppt'  => 'application/vnd.ms-powerpoint',
-    'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    'jpg'  => 'image/jpeg',
-    'jpeg' => 'image/jpeg',
-    'png'  => 'image/png',
-    'gif'  => 'image/gif',
-    'html' => 'text/html',
-    'htm'  => 'text/html',
-    'txt'  => 'text/plain',
-    'csv'  => 'text/csv'
+$role_folders = [
+    'subscriber' => 'group-1',
+    'contributor' => 'group-2',
+    'editor' => 'group-3',        // Neue Rolle
+    'author' => 'group-4'         // Neue Rolle
 ];
 ```
 
-**Sicherheitshinweise:**
-- Füge nur MIME-Types hinzu, die wirklich benötigt werden
-- Aktiviere `STRICT_MIME_CHECK` für zusätzliche Sicherheit
-- Überprüfe regelmäßig die MIME-Type-Liste
+## 3. Download-Einstellungen
 
-## Erweiterte Konfiguration
-
-### 1. Debug-Modus
-
+### 3.1 Standard-Konfiguration
 ```php
-// Debug-Modus aktivieren/deaktivieren
+define('MAX_DIRECT_DOWNLOAD_SIZE', 524288);  // 512 KB
+define('CHUNK_SIZE', 1048576);              // 1 MB
+```
+
+### 3.2 Anpassung der Chunk-Größe
+```php
+// Für schnellere Downloads
+define('CHUNK_SIZE', 4194304);  // 4 MB
+
+// Für langsamere Verbindungen
+define('CHUNK_SIZE', 524288);   // 512 KB
+```
+
+## 4. Debug-Modus
+
+### 4.1 Aktivierung
+```php
+define('DEBUG_MODE', true);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+```
+
+### 4.2 Logging
+```php
+error_log('Debug: ' . $message);
+error_log('Chunk: ' . $chunk_number . ' von ' . $total_chunks);
+```
+
+## 5. Sicherheit
+
+### 5.1 Cache-Header
+```php
+header('Cache-Control: private, no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
+```
+
+### 5.2 MIME-Type-Validierung
+```php
+$allowed_mimes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+];
+```
+
+## 6. Fehlerbehebung
+
+### 6.1 Pfadprobleme
+- Überprüfe den WordPress-Pfad in `secure-config.php`
+- Stelle sicher, dass die Verzeichnisstruktur korrekt ist
+- Prüfe die Berechtigungen der Verzeichnisse
+
+### 6.2 Zugriffsprobleme
+- Überprüfe die Rollenzuordnung
+- Stelle sicher, dass die Benutzer die richtigen Rollen haben
+- Prüfe die WordPress-Authentifizierung
+
+### 6.3 Download-Probleme
+- Überprüfe die Chunk-Größe
+- Stelle sicher, dass genügend Arbeitsspeicher verfügbar ist
+- Prüfe die PHP-Konfiguration (memory_limit, max_execution_time)
+
+## 2. Logging-Konfiguration
+
+### 2.1 Standard-Konfiguration
+```php
+// Logging-Verzeichnis und Datei
+define('LOG_DIR', dirname(__DIR__) . '/logs');
+define('LOG_FILE', LOG_DIR . '/access.log');
+
+// Debug-Modus (nur für Entwicklung!)
 define('DEBUG_MODE', false);
 ```
 
-**Auswirkungen:**
-- Aktiviert: Detaillierte Fehlermeldungen und Logging
-- Deaktiviert: Nur kritische Fehler werden angezeigt
-- Empfehlung: Im Produktivbetrieb deaktivieren
-
-### 2. Chunk-Größe
-
+### 2.2 Logging-Funktion
 ```php
-// Standard-Chunk-Größe (4 MB)
-define('CHUNK_SIZE', 4194304);
+function secure_log($message) {
+    if (DEBUG_MODE) {
+        error_log(date('[Y-m-d H:i:s] ') . $message . PHP_EOL, 3, LOG_FILE);
+    }
+}
 ```
 
-**Auswirkungen:**
-- Größere Chunks: Schnellere Downloads, höherer Speicherverbrauch
-- Kleinere Chunks: Langsamere Downloads, geringerer Speicherverbrauch
-- Empfehlung: An Server-Ressourcen anpassen
-
-### 3. Maximale Download-Größe
-
-```php
-// Maximale direkte Download-Größe (1 MB)
-define('MAX_DIRECT_DOWNLOAD_SIZE', 1048576);
-```
-
-**Auswirkungen:**
-- Dateien über dieser Größe werden immer gestreamt
-- Verhindert Timeouts bei großen Dateien
-- Empfehlung: An Server-Konfiguration anpassen
-
-### 4. Caching
-
-```php
-// Cache aktivieren
-define('ENABLE_CACHE', true);
-define('CACHE_DURATION', 3600); // 1 Stunde
-```
-
-**Auswirkungen:**
-- Verbesserte Performance für statische Dateien
-- Reduzierte Server-Last
-- Empfehlung: Für statische Inhalte aktivieren
-
-### 5. Sicherheitseinstellungen
-
-```php
-// Strikte MIME-Type-Validierung
-define('STRICT_MIME_CHECK', true);
-
-// Zusätzliche Sicherheitsheader
-define('ADD_SECURITY_HEADERS', true);
-
-// Logging aktivieren
-define('ENABLE_LOGGING', true);
-```
-
-**Auswirkungen:**
-- `STRICT_MIME_CHECK`: Verhindert MIME-Type-Spoofing
-- `ADD_SECURITY_HEADERS`: Verbesserte Browser-Sicherheit
-- `ENABLE_LOGGING`: Detaillierte Zugriffsprotokolle
-
-## Performance-Optimierung
-
-### 1. Chunk-Größe optimieren
-
-Die optimale Chunk-Größe hängt von verschiedenen Faktoren ab:
-
-```php
-// Kleine Dateien (bis 1 MB)
-define('CHUNK_SIZE', 1048576); // 1 MB
-
-// Mittlere Dateien (1-10 MB)
-define('CHUNK_SIZE', 4194304); // 4 MB
-
-// Große Dateien (10+ MB)
-define('CHUNK_SIZE', 8388608); // 8 MB
-```
-
-**Empfehlungen:**
-- Teste verschiedene Chunk-Größen
-- Überwache Server-Last
-- Passe an typische Dateigrößen an
-
-### 2. Caching-Strategien
-
-```php
-// Cache-Header für statische Dateien
-header('Cache-Control: public, max-age=' . CACHE_DURATION);
-header('Expires: ' . gmdate('D, d M Y H:i:s', time() + CACHE_DURATION) . ' GMT');
-```
-
-**Empfehlungen:**
-- Lange Cache-Dauer für statische Inhalte
-- Kurze Cache-Dauer für dynamische Inhalte
-- Cache-Busting für Updates
-
-## Best Practices
-
-### 1. Sicherheit
-- Aktiviere `STRICT_MIME_CHECK`
-- Setze `ADD_SECURITY_HEADERS`
-- Aktiviere `ENABLE_LOGGING`
-- Regelmäßige Überprüfung der Logs
-
-### 2. Performance
-- Optimiere `CHUNK_SIZE`
-- Aktiviere Caching für statische Dateien
-- Überwache Performance-Metriken
-- Regelmäßige Performance-Tests
-
-### 3. Wartung
-- Regelmäßige Log-Analyse
-- Performance-Monitoring
-- Sicherheits-Updates
-- Backup-Strategie
+### 2.3 Log-Inhalte
+- Benutzerrollen und Zugriffsversuche
+- Dateiübertragungen und Chunk-Übertragungen
+- Fehler und Warnungen
+- Performance-Metriken
 
 Mit diesen Schritten ist die Konfiguration abgeschlossen. Weiter geht es mit der Installation! 

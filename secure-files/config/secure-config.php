@@ -6,11 +6,18 @@
  * Änderungen an der Funktionalität sollten hier vorgenommen werden.
  */
 
-// WordPress-Pfad
-define('WP_CORE_PATH', dirname(__DIR__) . '/wordpress/wp-load.php');
+// WordPress-Pfad (flexibel)
+define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');  // Standard
+// Alternative: define('WP_CORE_PATH', dirname(__DIR__, 2) . '/main/wp-load.php');
+
+// Logging-Konfiguration
+define('LOG_DIR', dirname(__DIR__) . '/logs');
+define('LOG_FILE', LOG_DIR . '/access.log');
+define('LOG_MAX_SIZE', 5 * 1024 * 1024);  // 5 MB
+define('LOG_MAX_FILES', 5);               // Max. 5 Log-Dateien
 
 // Rollenzuordnungen
-$role_mappings = [
+$role_folders = [
     'subscriber' => 'group-1',
     'contributor' => 'group-2'
 ];
@@ -18,6 +25,8 @@ $role_mappings = [
 // Download-Einstellungen
 define('MAX_DIRECT_DOWNLOAD_SIZE', 1048576);  // 1 MB
 define('CHUNK_SIZE', 4194304);               // 4 MB
+define('MAX_FILE_SIZE', 1024 * 1024 * 1024); // 1 GB
+define('MIN_MEMORY_LIMIT', '128M');          // Minimale PHP Memory-Limit
 
 // Erlaubte Dateiendungen und ihre MIME-Types
 $allowed_mime_types = [
@@ -36,7 +45,10 @@ $allowed_mime_types = [
     'xls'  => 'application/vnd.ms-excel',
     'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'ppt'  => 'application/vnd.ms-powerpoint',
-    'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'zip'  => 'application/zip',
+    'rar'  => 'application/x-rar-compressed',
+    '7z'   => 'application/x-7z-compressed'
 ];
 
 // Cache-Einstellungen
@@ -48,7 +60,8 @@ define('SECURITY_HEADERS', [
     'X-Frame-Options: DENY',
     'X-XSS-Protection: 1; mode=block',
     'Referrer-Policy: strict-origin-when-cross-origin',
-    'Content-Security-Policy: default-src \'self\''
+    'Content-Security-Policy: default-src \'self\'',
+    'Strict-Transport-Security: max-age=31536000; includeSubDomains'  // HTTPS erzwingen
 ]);
 
 // Debug-Modus (nur für Entwicklung!)

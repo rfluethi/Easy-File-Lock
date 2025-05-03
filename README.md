@@ -1,10 +1,10 @@
 # Website Access Control Basic
 
-Ein sicheres System zum Verwalten und Ausliefern geschützter Dateien in WordPress.
+Ein System zum Verwalten und Ausliefern geschützter Dateien in WordPress.
 
 ## Features
 
-- Sichere Speicherung von Dateien außerhalb des WebRoots
+- Speicherung von Dateien außerhalb des WebRoots
 - Rollenbasierte Zugriffskontrolle
 - Effizientes Streaming großer Dateien
 - Schutz vor unbefugtem Zugriff
