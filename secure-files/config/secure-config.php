@@ -7,8 +7,8 @@
  */
 
 // WordPress-Pfad (flexibel)
-define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/wp-load.php');  // Standard
-// Alternative: define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/wordpress/wp-load.php');
+define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wordpress/wp-load.php');  // Wenn WordPress in /wordpress/ liegt
+// Alternative: define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');  // Wenn WordPress direkt im WebRoot liegt
 
 // Logging-Konfiguration
 define('LOG_DIR', dirname(__DIR__) . '/logs');
