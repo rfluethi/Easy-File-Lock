@@ -2,10 +2,13 @@
 
 ## Schnellstart Installation
 
-1. Repository klonen:
+1. Repository klonen oder Release-Dateien herunterladen:
    ```bash
    git clone https://github.com/your-username/Website-Access-Control-Basic.git
    ```
+   oder
+   - [protected.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/protected.zip)
+   - [secure-files.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/secure-files.zip)
 
 2. Dateien hochladen:
    - `protected/` in `public_html/` kopieren
@@ -13,8 +16,43 @@
 
 3. WordPress konfigurieren:
    ```php
-   define( 'SECURE_FILE_PATH', dirname( dirname( ABSPATH ) ) . '/secure-files' );
+   define('SECURE_FILE_PATH', dirname(dirname(ABSPATH)) . '/secure-files');
    ```
+
+## Verzeichnisstruktur
+
+### Repository-Struktur
+```
+Website-Access-Control-Basic/
+├── protected/           # Wird in public_html/ kopiert
+│   ├── .htaccess       # URL-Weiterleitung
+│   └── check-access.php # Zugriffskontrolle
+├── secure-files/        # Wird außerhalb des WebRoots kopiert
+│   ├── config/
+│   │   └── secure-config.php  # Konfigurationsdatei
+│   ├── group-1/
+│   │   └── example-1.pdf      # Beispiel für Subscriber
+│   └── group-2/
+│       └── example-2.pdf      # Beispiel für Contributor
+└── docs/               # Dokumentation
+```
+
+### Installations-Struktur
+```
+/var/www/
+├── public_html/        # WebRoot
+│   ├── wordpress/     # WordPress-Installation
+│   └── protected/     # Kopiert aus protected/
+│       ├── .htaccess  # URL-Weiterleitung
+│       └── check-access.php # Zugriffskontrolle
+└── secure-files/      # Kopiert aus secure-files/
+    ├── config/
+    │   └── secure-config.php  # Konfigurationsdatei
+    ├── group-1/
+    │   └── example-1.pdf      # Beispiel für Subscriber
+    └── group-2/
+        └── example-2.pdf      # Beispiel für Contributor
+```
 
 ## Systemvoraussetzungen
 
