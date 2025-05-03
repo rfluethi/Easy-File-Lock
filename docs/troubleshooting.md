@@ -1,197 +1,208 @@
 # Fehlerbehebung
 
-Hier findest du Lösungen für häufige Probleme und Fehlermeldungen.
+Diese Anleitung unterstützt Administrator\:innen und Entwickler\:innen beim Diagnostizieren und Beheben typischer Probleme im Zugriffssystem geschützter Dateien.
 
-## 1. Häufige Probleme
+## Häufige Probleme
 
-### 1.1 Zugriffsprobleme
+### Zugriffsprobleme
 
 #### Problem: Benutzer kann nicht auf Dateien zugreifen
-- Überprüfen Sie die Rollenzuordnung in `secure-config.php`:
-```php
-$role_mappings = [
-    'subscriber' => 'group-1',    // Zugriff auf example-1.pdf
-    'contributor' => 'group-2'    // Zugriff auf example-2.pdf
-];
-```
-- Stellen Sie sicher, dass der Benutzer die korrekte WordPress-Rolle hat
-- Überprüfen Sie die Verzeichnisberechtigungen
+
+**Schritte zur Behebung:**
+
+1. Öffne `secure-config.php` und überprüfe die Rollenzuordnung:
+
+   ```php
+   $role_mappings = [
+       'subscriber' => 'group-1',
+       'contributor' => 'group-2'
+   ];
+   ```
+2. Vergewissere dich, dass der Benutzer in WordPress die korrekte Rolle besitzt.
+3. Prüfe die Verzeichnisberechtigungen (mind. 755 für Ordner, 644 für Dateien).
+4. Konsultiere bei Bedarf die Log-Datei unter: `secure-files/logs/access.log`
 
 #### Problem: Datei wird nicht gefunden
-- Überprüfen Sie den Dateipfad (z.B. `/protected/group-1/example-1.pdf`)
-- Stellen Sie sicher, dass die Datei im richtigen Gruppenverzeichnis liegt
-- Überprüfen Sie die Dateiberechtigungen (644 für PDF-Dateien)
 
-### 404 - Datei nicht gefunden
+**Schritte zur Behebung:**
 
-**Symptome:**
-- Browser zeigt "404 Not Found"
-- Datei existiert, ist aber nicht erreichbar
+1. Überprüfe die URL (z. B. `/protected/group-1/example-1.pdf`).
+2. Stelle sicher, dass die Datei im passenden Gruppenverzeichnis liegt.
+3. Überprüfe, ob die Datei korrekt benannt und lesbar ist (Berechtigung 644).
+
+### Fehler 404 – Datei nicht gefunden
 
 **Mögliche Ursachen:**
-1. Falscher Pfad in der URL (z.B. `/protected/group-1/example-1.pdf`)
-2. Datei liegt nicht im richtigen Ordner
-3. WordPress-Konstante `SECURE_FILE_PATH` ist falsch gesetzt
+
+* Falsche URL
+* Datei liegt im falschen Ordner
+* Falsche `SECURE_FILE_PATH`-Konstante
 
 **Lösungen:**
-1. Prüfe die URL-Struktur:
+
+1. Vergleiche die URL mit der Serverstruktur:
+
    ```
-   https://deine-domain.tld/protected/group-1/example-1.pdf  # für Subscriber
-   https://deine-domain.tld/protected/group-2/example-2.pdf  # für Contributor
+   /secure-files/group-1/example-1.pdf  // für Subscriber
+   /secure-files/group-2/example-2.pdf  // für Contributor
    ```
-2. Stelle sicher, dass die Datei im richtigen Ordner liegt:
-   ```
-   /secure-files/group-1/example-1.pdf  # für Subscriber
-   /secure-files/group-2/example-2.pdf  # für Contributor
-   ```
-3. Überprüfe die `wp-config.php`:
+2. Überprüfe in `wp-config.php`:
+
    ```php
    define('SECURE_FILE_PATH', dirname(dirname(ABSPATH)) . '/secure-files');
    ```
+3. Prüfe auf Tippfehler im Dateinamen.
 
-### 403 - Zugriff verweigert
-
-**Symptome:**
-- Browser zeigt "403 Forbidden"
-- Login-Funktioniert, aber Datei ist nicht zugänglich
+### Fehler 403 – Zugriff verweigert
 
 **Mögliche Ursachen:**
-1. Benutzer hat nicht die richtige Rolle
-2. Rolle ist nicht in `secure-config.php` konfiguriert
-3. Datei liegt im falschen Ordner für die Rolle
+
+* Benutzerrolle fehlt oder ist nicht korrekt zugewiesen
+* Rolle nicht im Zugriffsskript registriert
+* Datei liegt im falschen Verzeichnis
 
 **Lösungen:**
-1. Prüfe die Benutzerrolle in WordPress
-2. Überprüfe die Rollen-Konfiguration:
+
+1. Prüfe die Benutzerrolle in WordPress.
+2. Kontrolliere die Rollen-Konfiguration in `secure-config.php`:
+
    ```php
    $role_folders = [
-       'subscriber' => 'group-1',    // Zugriff auf example-1.pdf
-       'contributor' => 'group-2'    // Zugriff auf example-2.pdf
+       'subscriber' => 'group-1',
+       'contributor' => 'group-2'
    ];
    ```
-3. Stelle sicher, dass die Datei im richtigen Ordner liegt:
-   ```
-   /secure-files/group-1/example-1.pdf  # für Subscriber
-   /secure-files/group-2/example-2.pdf  # für Contributor
-   ```
+3. Stelle sicher, dass Datei und Rolle übereinstimmen.
 
-### Endlose Weiterleitung
-
-**Symptome:**
-- Browser wird ständig zum Login weitergeleitet
-- Login funktioniert nicht richtig
+### Endlose Weiterleitung (Loop)
 
 **Mögliche Ursachen:**
-1. Cookie-Problem (www vs. non-www)
-2. Falscher Pfad zu `wp-load.php`
-3. WordPress-Session-Problem
+
+* Cookie-Konflikt zwischen www / non-www
+* Falscher Pfad zu `wp-load.php`
+* WordPress-Session ungültig
 
 **Lösungen:**
-1. Prüfe die Domain-Einstellungen in WordPress
-2. Überprüfe den Pfad in `check-access.php`:
+
+1. Prüfe die Domain-Konfiguration in WordPress.
+2. Verifiziere in `check-access.php`:
+
    ```php
    require_once WP_CORE_PATH;
    ```
-3. Lösche Browser-Cookies und Cache
+3. Leere den Browser-Cache und lösche Cookies.
 
 ## Download-Probleme
 
 ### Abgebrochene Downloads
 
-**Symptome:**
-- Große Dateien werden nicht vollständig heruntergeladen
-- Download bricht mitten drin ab
+**Ursachen:**
 
-**Mögliche Ursachen:**
-1. PHP-Zeitlimit zu niedrig
-2. Chunk-Größe zu groß/klein
-3. Server-Timeout
+* Zeitlimit in PHP überschritten
+* Ungünstige Chunk-Größe
+* Netzwerkprobleme / Verbindungs-Timeouts
 
 **Lösungen:**
-1. Erhöhe die Chunk-Größe in `secure-config.php`:
+
+1. Passe `CHUNK_SIZE` und `MAX_DIRECT_DOWNLOAD_SIZE` in `secure-config.php` an:
+
    ```php
    define('CHUNK_SIZE', 4194304);              // 4 MB
    define('MAX_DIRECT_DOWNLOAD_SIZE', 524288); // 512 KB
    ```
+2. Server-Konfiguration auf Timeout prüfen (`max_execution_time`).
 
 ### Falsche MIME-Types
 
 **Symptome:**
-- Browser zeigt Dateien falsch an
-- Downloads starten nicht korrekt
 
-**Mögliche Ursachen:**
-1. Fehlender MIME-Type in der Konfiguration
-2. Falsche Dateiendung
+* Datei wird im Browser angezeigt statt heruntergeladen
+* Fehlermeldung „nicht unterstützt“
 
 **Lösungen:**
-1. Füge den MIME-Type in `secure-config.php` hinzu:
+
+1. Trage fehlende MIME-Types in `secure-config.php` ein:
+
    ```php
    $allowed_mime_types = [
-       'html' => 'text/html',
-       'pdf'  => 'application/pdf',
-       // ... weitere MIME-Types ...
-       'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+       'pdf' => 'application/pdf',
+       'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+       'html' => 'text/html'
    ];
    ```
-2. Prüfe die Dateiendung
+2. Prüfe Dateiendungen und Dateityp-Konsistenz.
 
 ## Server-Probleme
 
-### 500 Internal Server Error
-
-**Symptome:**
-- Server meldet internen Fehler
-- Keine spezifische Fehlermeldung
+### Fehler 500 – Interner Serverfehler
 
 **Mögliche Ursachen:**
-1. PHP-Fehler in der Konfiguration
-2. Falsche Dateiberechtigungen
-3. Fehlende PHP-Erweiterungen
+
+* Fehlerhafte PHP-Konfiguration
+* Falsche Berechtigungen
+* Fehlende Extensions
 
 **Lösungen:**
+
 1. Aktiviere den Debug-Modus:
+
    ```php
    define('DEBUG_MODE', true);
    ```
-2. Prüfe die Dateiberechtigungen:
+2. Prüfe Berechtigungen:
+
    ```
    secure-files: 755
    config: 755
    secure-config.php: 644
    ```
-3. Stelle sicher, dass alle benötigten PHP-Erweiterungen aktiviert sind
+3. Stelle sicher, dass Extensions wie `fileinfo`, `mbstring` und `openssl` aktiv sind.
 
-### Performance-Probleme
+### Langsame Downloads / Performance
 
-**Symptome:**
-- Langsame Downloads
-- Hohe Serverlast
+**Ursachen:**
 
-**Mögliche Ursachen:**
-1. Zu kleine Chunk-Größe
-2. Zu viele gleichzeitige Downloads
-3. Server-Ressourcen erschöpft
+* Chunk-Größe zu klein
+* Hohe gleichzeitige Last
+* Ressourcenbeschränkung auf Serverebene
 
 **Lösungen:**
-1. Optimiere die Chunk-Größe
-2. Implementiere Download-Limits
-3. Prüfe Server-Ressourcen
+
+1. Erhöhe `CHUNK_SIZE` schrittweise.
+2. Nutze Server-seitiges Rate-Limiting.
+3. Analysiere Serverauslastung (RAM, CPU, Disk I/O).
 
 ### Cache-Probleme
 
 **Symptome:**
-- Dateien werden im Browser gecacht
-- Änderungen sind nicht sofort sichtbar
-- Alte Versionen werden angezeigt
 
-**Mögliche Ursachen:**
-1. Browser-Cache nicht deaktiviert
-2. Cache-Header nicht korrekt gesetzt
-3. Proxy-Cache aktiv
+* Änderungen an Dateien werden nicht angezeigt
+* Alte Versionen im Browser
 
 **Lösungen:**
-1. Überprüfe die Cache-Einstellungen in `secure-config.php`:
+
+1. Überprüfe die Cache-Control-Einstellungen:
+
    ```php
    define('CACHE_CONTROL', 'private, no-cache, no-store, must-revalidate');
    ```
+2. Lösche Browser-Cache, ggf. Cache-Plugin deaktivieren
+
+## Schnellcheck: Zugriffsfehler
+
+* [ ] Benutzer ist eingeloggt?
+* [ ] Rolle korrekt konfiguriert?
+* [ ] Datei liegt im richtigen Gruppenordner?
+* [ ] MIME-Type erlaubt?
+* [ ] Berechtigungen korrekt gesetzt?
+* [ ] Zugriff wird in `access.log` dokumentiert?
+
+## Hinweis
+
+Für weiterführende Diagnosen empfiehlt sich die regelmäßige Prüfung der Log-Datei:
+
+```
+/secure-files/logs/access.log
+```
+
+Diese Datei enthält Hinweise zu Blockierungen, Zugriffen und Fehlermeldungen.
