@@ -1,14 +1,14 @@
 # Konfigurationsdokumentation
 
-## 1. Wichtige Hinweise
+## Wichtige Hinweise
 
-### 1.1 Lade-Reihenfolge
+### Lade-Reihenfolge
 Die Reihenfolge der Einbindungen ist **kritisch**:
 1. `secure-config.php` MUSS zuerst geladen werden
 2. Erst dann dürfen Konstanten wie `MIN_MEMORY_LIMIT` verwendet werden
 3. WordPress wird erst danach geladen
 
-### 1.2 Fehlerbehandlung
+### Fehlerbehandlung
 ```php
 // In check-access.php
 $config_file = dirname(dirname(__DIR__)) . '/secure-files/config/secure-config.php';
@@ -24,63 +24,61 @@ if (!file_exists(WP_CORE_PATH)) {
 require_once WP_CORE_PATH;
 ```
 
-## 2. WordPress-Pfad
+## Download-Einstellungen
 
-### 2.1 Standard-Konfiguration
-```php
-// Wenn WordPress in einem Unterverzeichnis liegt
-define('WP_CORE_PATH', dirname(dirname(__DIR__)) . '/wordpress/wp-load.php');
+Mit den folgenden Einstellungen kannst du das Verhalten beim Dateidownload steuern:
 
-// Wenn WordPress direkt im WebRoot liegt
-define('WP_CORE_PATH', dirname(dirname(__DIR__)) . '/wp-load.php');
-```
-
-### 2.2 Verzeichnisstruktur
-```
-/path/to/
-├── wordpress/             # WordPress-Installation
-│   └── wp-load.php
-├── protected/            # Im WebRoot
-│   ├── .htaccess
-│   └── check-access.php
-└── secure-files/        # Außerhalb des WebRoots
-    ├── config/
-    │   └── secure-config.php
-    ├── logs/
-    │   └── access.log
-    ├── group-1/
-    │   └── example-1.pdf
-    └── group-2/
-        └── example-2.pdf
-```
-
-## 3. Konfigurationsoptionen
-
-### 3.1 Rollenzuordnung
-```php
-$role_folders = [
-    'subscriber' => 'group-1',    // Zugriff auf /group-1/
-    'contributor' => 'group-2'    // Zugriff auf /group-2/
-];
-```
-
-### 3.2 Download-Einstellungen
 ```php
 define('MAX_DIRECT_DOWNLOAD_SIZE', 1048576);  // 1 MB
 define('CHUNK_SIZE', 4194304);               // 4 MB
 define('MAX_FILE_SIZE', 1024 * 1024 * 1024); // 1 GB
-define('MIN_MEMORY_LIMIT', '128M');          // Minimale PHP Memory-Limit
+define('MIN_MEMORY_LIMIT', '128M');          // Minimales PHP Memory-Limit
 ```
 
-### 3.3 Logging
+**Erklärung:**
+- **MAX_DIRECT_DOWNLOAD_SIZE:** Dateien bis zu dieser Größe werden direkt (ohne Chunking) an den Client gesendet. Größere Dateien werden gestreamt.
+- **CHUNK_SIZE:** Größe der Datenblöcke beim gestreamten Download. Zu kleine Werte verlangsamen, zu große Werte können Speicherprobleme verursachen.
+- **MAX_FILE_SIZE:** Maximale Dateigröße, die überhaupt ausgeliefert wird. Alles darüber wird abgelehnt.
+- **MIN_MEMORY_LIMIT:** Das Skript prüft, ob das PHP-Memory-Limit mindestens diesen Wert hat.
+
+**Beispiel:**
+```php
+define('MAX_DIRECT_DOWNLOAD_SIZE', 2 * 1024 * 1024); // 2 MB
+define('CHUNK_SIZE', 8 * 1024 * 1024);              // 8 MB
+define('MAX_FILE_SIZE', 500 * 1024 * 1024);         // 500 MB
+define('MIN_MEMORY_LIMIT', '256M');
+```
+
+## Logging-Einstellungen
+
+Das Logging dient der Nachvollziehbarkeit und Fehleranalyse. Die wichtigsten Einstellungen:
+
 ```php
 define('LOG_DIR', dirname(__DIR__) . '/logs');
 define('LOG_FILE', LOG_DIR . '/access.log');
 define('LOG_MAX_SIZE', 5 * 1024 * 1024);  // 5 MB
 define('LOG_MAX_FILES', 5);               // Max. 5 Log-Dateien
+define('DEBUG_MODE', true);               // Debug-Ausgaben aktivieren
 ```
 
-### 3.4 Sicherheit
+**Erklärung:**
+- **LOG_DIR:** Verzeichnis, in dem die Log-Dateien abgelegt werden.
+- **LOG_FILE:** Name der Log-Datei.
+- **LOG_MAX_SIZE:** Ab dieser Größe wird die Log-Datei rotiert (umbenannt und neu begonnen).
+- **LOG_MAX_FILES:** Wie viele alte Log-Dateien maximal behalten werden.
+- **DEBUG_MODE:** Wenn aktiviert, werden zusätzliche Debug-Informationen ins Log geschrieben.
+
+**Beispiel:**
+```php
+define('LOG_MAX_SIZE', 10 * 1024 * 1024); // 10 MB
+define('LOG_MAX_FILES', 10);
+define('DEBUG_MODE', false);              // Debug-Logging deaktivieren (empfohlen in Produktion)
+```
+
+## Sicherheitseinstellungen
+
+Hier werden die wichtigsten Sicherheitsaspekte konfiguriert:
+
 ```php
 define('CACHE_CONTROL', 'private, no-cache, no-store, must-revalidate');
 
@@ -94,32 +92,91 @@ define('SECURITY_HEADERS', [
 ]);
 ```
 
-## 4. Debug-Modus
+**Erklärung:**
+- **CACHE_CONTROL:** Steuert, wie Browser und Proxies die ausgelieferten Dateien cachen dürfen. Standard: kein Caching.
+- **SECURITY_HEADERS:** Array mit HTTP-Headern, die für jede Datei gesetzt werden. Sie schützen vor typischen Web-Angriffen (z. B. XSS, Clickjacking).
 
-### 4.1 Aktivierung
+**Beispiel:**
 ```php
-define('DEBUG_MODE', true);
+define('CACHE_CONTROL', 'no-store, no-cache, must-revalidate, max-age=0');
+define('SECURITY_HEADERS', [
+    'X-Frame-Options: SAMEORIGIN',
+    'X-Content-Type-Options: nosniff',
+    'Referrer-Policy: no-referrer'
+]);
 ```
 
-### 4.2 Log-Datei prüfen
-```bash
-tail -f secure-files/logs/access.log
+## Rollenzuordnung (Ordner-Mapping)
+
+Hier legst du fest, welche WordPress-Rolle auf welches Verzeichnis zugreifen darf:
+
+```php
+$role_folders = [
+    'subscriber'  => 'group-1',
+    'contributor' => 'group-1', // Beide auf das gleiche Verzeichnis
+    'author'      => 'group-2'
+];
 ```
 
-### 4.3 Häufige Fehler
-1. **"Undefined constant MIN_MEMORY_LIMIT"**
-   - Konfigurationsdatei wird nicht geladen
-   - Pfad zur Konfigurationsdatei ist falsch
+**Beispiel:**
+- Sowohl "subscriber" als auch "contributor" haben Zugriff auf `/secure-files/group-1/`.
+- "author" hat Zugriff auf `/secure-files/group-2/`.
 
-2. **"WordPress nicht gefunden"**
-   - Pfad zu `wp-load.php` ist falsch
-   - WordPress-Installation fehlt
+## MIME-Type Einstellungen
 
-3. **"Konfigurationsdatei nicht gefunden"**
-   - Verzeichnisstruktur ist falsch
-   - Berechtigungen sind falsch
+Erlaube nur bestimmte Dateitypen für den Download:
 
-4. **"Zugriff verweigert"**
-   - Benutzer ist nicht eingeloggt
-   - Benutzer hat nicht die richtige Rolle
-   - Datei liegt im falschen Ordner 
+```php
+$allowed_mime_types = [
+    'pdf'  => 'application/pdf',
+    'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'jpg'  => 'image/jpeg',
+    // weitere Typen ...
+];
+```
+
+**Beispiel:**
+```php
+$allowed_mime_types['xlsx'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+```
+
+## Beispiel für eine vollständige Konfiguration
+
+```php
+define('WP_CORE_PATH', dirname(dirname(__DIR__)) . '/wordpress/wp-load.php');
+define('LOG_DIR', dirname(__DIR__) . '/logs');
+define('LOG_FILE', LOG_DIR . '/access.log');
+define('LOG_MAX_SIZE', 5 * 1024 * 1024);
+define('LOG_MAX_FILES', 5);
+define('MAX_DIRECT_DOWNLOAD_SIZE', 2 * 1024 * 1024);
+define('CHUNK_SIZE', 8 * 1024 * 1024);
+define('MAX_FILE_SIZE', 500 * 1024 * 1024);
+define('MIN_MEMORY_LIMIT', '256M');
+define('CACHE_CONTROL', 'private, no-cache, no-store, must-revalidate');
+define('DEBUG_MODE', false);
+
+define('SECURITY_HEADERS', [
+    'X-Content-Type-Options: nosniff',
+    'X-Frame-Options: DENY',
+    'X-XSS-Protection: 1; mode=block',
+    'Referrer-Policy: strict-origin-when-cross-origin',
+    'Content-Security-Policy: default-src \'self\'',
+    'Strict-Transport-Security: max-age=31536000; includeSubDomains'
+]);
+
+$role_folders = [
+    'subscriber'  => 'group-1',
+    'contributor' => 'group-1',
+    'author'      => 'group-2'
+];
+
+$allowed_mime_types = [
+    'pdf'  => 'application/pdf',
+    'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'jpg'  => 'image/jpeg',
+    'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+];
+```
+
+**Tipp:**  
+Passe die Werte immer an deine Serverumgebung und Sicherheitsanforderungen an. In der Produktion sollte `DEBUG_MODE` immer auf `false` stehen!
