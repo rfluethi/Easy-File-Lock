@@ -7,8 +7,8 @@
  */
 
 // WordPress-Pfad (flexibel)
-define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wordpress/wp-load.php');  // Wenn WordPress in /wordpress/ liegt
-// Alternative: define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');  // Wenn WordPress direkt im WebRoot liegt
+define('WP_CORE_PATH', dirname(dirname(__DIR__)) . '/wordpress/wp-load.php');  // Wenn WordPress in /wordpress/ liegt
+// Alternative: define('WP_CORE_PATH', dirname(dirname(__DIR__)) . '/wp-load.php');  // Wenn WordPress direkt im WebRoot liegt
 
 // Logging-Konfiguration
 define('LOG_DIR', dirname(__DIR__) . '/logs');
@@ -65,4 +65,4 @@ define('SECURITY_HEADERS', [
 ]);
 
 // Debug-Modus (nur für Entwicklung!)
-define('DEBUG_MODE', false); 
+define('DEBUG_MODE', true); 

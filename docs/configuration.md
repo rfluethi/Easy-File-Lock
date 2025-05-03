@@ -11,7 +11,7 @@ Die Reihenfolge der Einbindungen ist **kritisch**:
 ### 1.2 Fehlerbehandlung
 ```php
 // In check-access.php
-$config_file = dirname(__DIR__, 2) . '/secure-files/config/secure-config.php';
+$config_file = dirname(dirname(__DIR__)) . '/secure-files/config/secure-config.php';
 if (!file_exists($config_file)) {
     die('Fehler: Konfigurationsdatei nicht gefunden. Bitte Installation überprüfen.');
 }
@@ -29,136 +29,97 @@ require_once WP_CORE_PATH;
 ### 2.1 Standard-Konfiguration
 ```php
 // Wenn WordPress in einem Unterverzeichnis liegt
-define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wordpress/wp-load.php');
+define('WP_CORE_PATH', dirname(dirname(__DIR__)) . '/wordpress/wp-load.php');
 
 // Wenn WordPress direkt im WebRoot liegt
-define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');
+define('WP_CORE_PATH', dirname(dirname(__DIR__)) . '/wp-load.php');
 ```
 
-### 2.2 Pfadberechnung
-- `dirname(__DIR__, 2)` geht zwei Verzeichnisse hoch
-- Bei WordPress in einem Unterverzeichnis:
-  - Start: `/path/to/secure-files/config/`
-  - Nach `dirname(__DIR__, 2)`: `/path/to/`
-  - Final: `/path/to/wordpress/wp-load.php`
+### 2.2 Verzeichnisstruktur
+```
+/path/to/
+├── wordpress/             # WordPress-Installation
+│   └── wp-load.php
+├── protected/            # Im WebRoot
+│   ├── .htaccess
+│   └── check-access.php
+└── secure-files/        # Außerhalb des WebRoots
+    ├── config/
+    │   └── secure-config.php
+    ├── logs/
+    │   └── access.log
+    ├── group-1/
+    │   └── example-1.pdf
+    └── group-2/
+        └── example-2.pdf
+```
 
-**Hinweis:**  
-- Der Pfad muss zum tatsächlichen Standort von WordPress passen
-- Der Name des WebRoot-Verzeichnisses spielt keine Rolle
-- Wichtig ist nur der relative Pfad von `secure-files` zu WordPress
+## 3. Konfigurationsoptionen
 
-## 3. Rollenzuordnung
-
-### 3.1 Standard-Konfiguration
+### 3.1 Rollenzuordnung
 ```php
 $role_folders = [
-    'subscriber' => 'group-1',    // Zugriff auf example-1.pdf
-    'contributor' => 'group-2'    // Zugriff auf example-2.pdf
+    'subscriber' => 'group-1',    // Zugriff auf /group-1/
+    'contributor' => 'group-2'    // Zugriff auf /group-2/
 ];
 ```
 
-### 3.2 Eigene Rollen hinzufügen
+### 3.2 Download-Einstellungen
 ```php
-$role_folders = [
-    'subscriber' => 'group-1',
-    'contributor' => 'group-2',
-    'editor' => 'group-3',        // Neue Rolle
-    'author' => 'group-4'         // Neue Rolle
-];
+define('MAX_DIRECT_DOWNLOAD_SIZE', 1048576);  // 1 MB
+define('CHUNK_SIZE', 4194304);               // 4 MB
+define('MAX_FILE_SIZE', 1024 * 1024 * 1024); // 1 GB
+define('MIN_MEMORY_LIMIT', '128M');          // Minimale PHP Memory-Limit
 ```
 
-## 4. Download-Einstellungen
-
-### 4.1 Standard-Konfiguration
+### 3.3 Logging
 ```php
-define('MAX_DIRECT_DOWNLOAD_SIZE', 524288);  // 512 KB
-define('CHUNK_SIZE', 1048576);              // 1 MB
-```
-
-### 4.2 Anpassung der Chunk-Größe
-```php
-// Für schnellere Downloads
-define('CHUNK_SIZE', 4194304);  // 4 MB
-
-// Für langsamere Verbindungen
-define('CHUNK_SIZE', 524288);   // 512 KB
-```
-
-## 5. Debug-Modus
-
-### 5.1 Aktivierung
-```php
-define('DEBUG_MODE', true);
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-```
-
-### 5.2 Logging
-```php
-error_log('Debug: ' . $message);
-error_log('Chunk: ' . $chunk_number . ' von ' . $total_chunks);
-```
-
-## 6. Sicherheit
-
-### 6.1 Cache-Header
-```php
-header('Cache-Control: private, no-cache, no-store, must-revalidate');
-header('Pragma: no-cache');
-header('Expires: 0');
-```
-
-### 6.2 MIME-Type-Validierung
-```php
-$allowed_mimes = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-];
-```
-
-## 7. Fehlerbehebung
-
-### 7.1 Pfadprobleme
-- Überprüfe den WordPress-Pfad in `secure-config.php`
-- Stelle sicher, dass die Verzeichnisstruktur korrekt ist
-- Prüfe die Berechtigungen der Verzeichnisse
-
-### 7.2 Zugriffsprobleme
-- Überprüfe die Rollenzuordnung
-- Stelle sicher, dass die Benutzer die richtigen Rollen haben
-- Prüfe die WordPress-Authentifizierung
-
-### 7.3 Download-Probleme
-- Überprüfe die Chunk-Größe
-- Stelle sicher, dass genügend Arbeitsspeicher verfügbar ist
-- Prüfe die PHP-Konfiguration (memory_limit, max_execution_time)
-
-## 8. Logging-Konfiguration
-
-### 8.1 Standard-Konfiguration
-```php
-// Logging-Verzeichnis und Datei
 define('LOG_DIR', dirname(__DIR__) . '/logs');
 define('LOG_FILE', LOG_DIR . '/access.log');
-
-// Debug-Modus (nur für Entwicklung!)
-define('DEBUG_MODE', false);
+define('LOG_MAX_SIZE', 5 * 1024 * 1024);  // 5 MB
+define('LOG_MAX_FILES', 5);               // Max. 5 Log-Dateien
 ```
 
-### 8.2 Logging-Funktion
+### 3.4 Sicherheit
 ```php
-function secure_log($message) {
-    if (DEBUG_MODE) {
-        error_log(date('[Y-m-d H:i:s] ') . $message . PHP_EOL, 3, LOG_FILE);
-    }
-}
+define('CACHE_CONTROL', 'private, no-cache, no-store, must-revalidate');
+
+define('SECURITY_HEADERS', [
+    'X-Content-Type-Options: nosniff',
+    'X-Frame-Options: DENY',
+    'X-XSS-Protection: 1; mode=block',
+    'Referrer-Policy: strict-origin-when-cross-origin',
+    'Content-Security-Policy: default-src \'self\'',
+    'Strict-Transport-Security: max-age=31536000; includeSubDomains'
+]);
 ```
 
-### 8.3 Log-Inhalte
-- Benutzerrollen und Zugriffsversuche
-- Dateiübertragungen und Chunk-Übertragungen
-- Fehler und Warnungen
-- Performance-Metriken
+## 4. Debug-Modus
 
-Mit diesen Schritten ist die Konfiguration abgeschlossen. Weiter geht es mit der Installation! 
+### 4.1 Aktivierung
+```php
+define('DEBUG_MODE', true);
+```
+
+### 4.2 Log-Datei prüfen
+```bash
+tail -f secure-files/logs/access.log
+```
+
+### 4.3 Häufige Fehler
+1. **"Undefined constant MIN_MEMORY_LIMIT"**
+   - Konfigurationsdatei wird nicht geladen
+   - Pfad zur Konfigurationsdatei ist falsch
+
+2. **"WordPress nicht gefunden"**
+   - Pfad zu `wp-load.php` ist falsch
+   - WordPress-Installation fehlt
+
+3. **"Konfigurationsdatei nicht gefunden"**
+   - Verzeichnisstruktur ist falsch
+   - Berechtigungen sind falsch
+
+4. **"Zugriff verweigert"**
+   - Benutzer ist nicht eingeloggt
+   - Benutzer hat nicht die richtige Rolle
+   - Datei liegt im falschen Ordner 

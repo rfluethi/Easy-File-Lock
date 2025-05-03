@@ -47,50 +47,65 @@ secure-files/                  # Außerhalb des WebRoots (nicht erreichbar)
 ### 2.1 WordPress-Pfad
 ```php
 // Wenn WordPress in einem Unterverzeichnis liegt
-define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wordpress/wp-load.php');
+define('WP_CORE_PATH', dirname(dirname(__DIR__)) . '/wordpress/wp-load.php');
 
 // Wenn WordPress direkt im WebRoot liegt
-define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');
+define('WP_CORE_PATH', dirname(dirname(__DIR__)) . '/wp-load.php');
 ```
 
 ### 2.2 Rollenzuordnung
 ```php
 $role_folders = [
-    'subscriber' => 'group-1',    // Zugriff auf example-1.pdf
-    'contributor' => 'group-2'    // Zugriff auf example-2.pdf
+    'subscriber' => 'group-1',    // Zugriff auf /group-1/
+    'contributor' => 'group-2'    // Zugriff auf /group-2/
 ];
 ```
 
-### 2.3 Download-Einstellungen
+### 2.3 Sicherheitseinstellungen
 ```php
-define('MAX_DIRECT_DOWNLOAD_SIZE', 1048576);  // 1 MB
-define('CHUNK_SIZE', 4194304);               // 4 MB
-define('MAX_FILE_SIZE', 1073741824);         // 1 GB
-define('MIN_MEMORY_LIMIT', '128M');          // Minimale PHP Memory-Limit
+// Cache-Control
+define('CACHE_CONTROL', 'private, no-cache, no-store, must-revalidate');
+
+// Sicherheits-Header
+define('SECURITY_HEADERS', [
+    'X-Content-Type-Options: nosniff',
+    'X-Frame-Options: DENY',
+    'X-XSS-Protection: 1; mode=block',
+    'Referrer-Policy: strict-origin-when-cross-origin',
+    'Content-Security-Policy: default-src \'self\'',
+    'Strict-Transport-Security: max-age=31536000; includeSubDomains'
+]);
 ```
 
-## 3. Sicherheit
+## 3. Fehlerbehebung
 
-### 3.1 Zugriffskontrolle
-- Nur eingeloggte WordPress-Benutzer
-- Rollenbasierte Zugriffsrechte
-- Administratoren haben Zugriff auf alle Dateien
-- Andere Rollen nur auf ihre zugewiesenen Verzeichnisse
+### 3.1 Log-Datei prüfen
+```bash
+tail -f secure-files/logs/access.log
+```
 
-### 3.2 Datei-Validierung
-- Pfad-Traversal-Schutz
-- MIME-Type-Validierung
-- Maximale Dateigröße: 1 GB
-- Erlaubte Dateitypen in `secure-config.php`
-- Dateinamen-Validierung (nur alphanumerisch, Punkt, Unterstrich, Bindestrich)
+### 3.2 Debug-Modus
+```php
+define('DEBUG_MODE', true);
+```
 
-### 3.3 Sicherheits-Header
-- X-Content-Type-Options: nosniff
-- X-Frame-Options: DENY
-- X-XSS-Protection: 1; mode=block
-- Referrer-Policy: strict-origin-when-cross-origin
-- Content-Security-Policy: default-src 'self'
-- Strict-Transport-Security: max-age=31536000; includeSubDomains
+### 3.3 Häufige Fehler
+1. **"Undefined constant MIN_MEMORY_LIMIT"**
+   - Konfigurationsdatei wird nicht geladen
+   - Pfad zur Konfigurationsdatei ist falsch
+
+2. **"WordPress nicht gefunden"**
+   - Pfad zu `wp-load.php` ist falsch
+   - WordPress-Installation fehlt
+
+3. **"Konfigurationsdatei nicht gefunden"**
+   - Verzeichnisstruktur ist falsch
+   - Berechtigungen sind falsch
+
+4. **"Zugriff verweigert"**
+   - Benutzer ist nicht eingeloggt
+   - Benutzer hat nicht die richtige Rolle
+   - Datei liegt im falschen Ordner
 
 ## 4. Performance
 
@@ -106,61 +121,20 @@ define('MIN_MEMORY_LIMIT', '128M');          // Minimale PHP Memory-Limit
 - Automatische Log-Rotation
 - Fehlerbehandlung
 
-## 5. Fehlerbehebung
+## 5. Wartung
 
-### 5.1 Häufige Probleme
-1. **403 Forbidden**
-   - Benutzer nicht eingeloggt
-   - Falsche Benutzerrolle
-   - Falscher Dateipfad
-
-2. **404 Not Found**
-   - Datei existiert nicht
-   - Falscher Dateipfad
-   - Berechtigungsprobleme
-
-3. **413 Request Entity Too Large**
-   - Datei größer als 1 GB
-   - Server-Limits erreicht
-
-4. **500 Internal Server Error**
-   - PHP-Version < 7.4
-   - PHP Memory-Limit < 128M
-   - Falsche Berechtigungen
-   - Fehlende WordPress-Integration
-
-### 5.2 Log-Analyse
-- Log-Datei: `secure-files/logs/access.log`
-- Format: `[YYYY-MM-DD HH:MM:SS] Nachricht`
-- Debug-Modus für detaillierte Logs
-- Log-Rotation bei 5 MB
-
-### 5.3 Berechtigungsprüfung
-```bash
-# Verzeichnisberechtigungen prüfen
-ls -la secure-files/
-ls -la secure-files/config/
-ls -la secure-files/logs/
-ls -la secure-files/group-*/
-
-# Log-Datei prüfen
-tail -f secure-files/logs/access.log
-```
-
-## 6. Wartung
-
-### 6.1 Regelmäßige Aufgaben
+### 5.1 Regelmäßige Aufgaben
 - Log-Dateien überprüfen
 - Berechtigungen prüfen
 - WordPress-Integration testen
 - Sicherheits-Header validieren
 
-### 6.2 Backup
+### 5.2 Backup
 - Regelmäßige Backups von `secure-files/`
 - Backup der Log-Dateien
 - Backup der Konfiguration
 
-### 6.3 Updates
+### 5.3 Updates
 - WordPress aktualisieren
 - PHP-Version prüfen
 - Sicherheits-Header aktualisieren

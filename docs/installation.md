@@ -7,7 +7,7 @@
    - [secure-files.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/secure-files.zip)
 
 2. Dateien entpacken und kopieren:
-   - `protected.zip` → Inhalt in das WebRoot-Verzeichnis kopieren (z.B. `htdocs/` oder `www/`)
+   - `protected.zip` → Inhalt in das WebRoot-Verzeichnis kopieren
    - `secure-files.zip` → Inhalt außerhalb des WebRoots kopieren
 
 3. WordPress konfigurieren:
@@ -26,9 +26,11 @@
 
 2. **Verzeichnisstruktur einrichten**
    ```bash
-   # WebRoot-Verzeichnis (z.B. htdocs, www)
+   # WebRoot-Verzeichnis
    /path/to/webroot/
-   └── protected/              # Aus protected.zip
+   ├── wordpress/             # WordPress-Installation
+   │   └── wp-load.php
+   └── protected/             # Aus protected.zip
        ├── .htaccess
        └── check-access.php
 
@@ -68,8 +70,8 @@
    b. Secure-Config (`secure-files/config/secure-config.php`):
    ```php
    // WordPress-Pfad (flexibel)
-   define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wordpress/wp-load.php');  // Wenn WordPress in /wordpress/ liegt
-   // Alternative: define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');  // Wenn WordPress direkt im WebRoot liegt
+   define('WP_CORE_PATH', dirname(dirname(__DIR__)) . '/wordpress/wp-load.php');  // Wenn WordPress in /wordpress/ liegt
+   // Alternative: define('WP_CORE_PATH', dirname(dirname(__DIR__)) . '/wp-load.php');  // Wenn WordPress direkt im WebRoot liegt
 
    // Logging-Konfiguration
    define('LOG_DIR', dirname(__DIR__) . '/logs');
@@ -77,8 +79,8 @@
 
    // Rollen und ihre zugehörigen Ordner
    $role_folders = [
-       'subscriber' => 'group-1',    // Zugriff auf example-1.pdf
-       'contributor' => 'group-2'    // Zugriff auf example-2.pdf
+       'subscriber' => 'group-1',    // Zugriff auf /group-1/
+       'contributor' => 'group-2'    // Zugriff auf /group-2/
    ];
 
    // Download-Einstellungen
@@ -154,30 +156,29 @@ Website-Access-Control-Basic/
 ```
 
 ### Beispiel-Installations-Struktur
-Nach der Installation könnte Ihre Verzeichnisstruktur so aussehen (Beispiel mit `htdocs` als WebRoot):
+Nach der Installation könnte Ihre Verzeichnisstruktur so aussehen:
 
 ```
 /var/www/                      # Server-Root
-├── htdocs/                    # WebRoot (von außen erreichbar)
-│   ├── main/                  # WordPress-Installation
-│   └── protected/             # Kopiert aus protected.zip
-│       ├── .htaccess          # URL-Weiterleitung
-│       └── check-access.php   # Zugriffskontrolle
-└── secure-files/              # Außerhalb des WebRoots (nicht erreichbar)
+├── wordpress/                # WordPress-Installation
+│   └── wp-load.php
+├── protected/                # Kopiert aus protected.zip
+│   ├── .htaccess            # URL-Weiterleitung
+│   └── check-access.php     # Zugriffskontrolle
+└── secure-files/            # Außerhalb des WebRoots (nicht erreichbar)
     ├── config/
-    │   └── secure-config.php  # Konfigurationsdatei
+    │   └── secure-config.php # Konfigurationsdatei
     ├── logs/
-    │   └── access.log        # Log-Datei
+    │   └── access.log       # Log-Datei
     ├── group-1/
-    │   └── example-1.pdf      # Beispiel für Subscriber
+    │   └── example-1.pdf     # Beispiel für Subscriber
     └── group-2/
-        └── example-2.pdf      # Beispiel für Contributor
+        └── example-2.pdf     # Beispiel für Contributor
 ```
 
 **Hinweis:**  
-- Der Name des WebRoot-Verzeichnisses kann je nach Hosting-Provider variieren (`htdocs`, `www`, etc.)
-- Wichtig ist nur, dass `secure-files` **außerhalb** des WebRoots liegt
 - Die WordPress-Installation kann direkt im WebRoot oder in einem Unterverzeichnis liegen
+- Wichtig ist nur, dass `secure-files` **außerhalb** des WebRoots liegt
 
 ## Systemvoraussetzungen
 
@@ -203,5 +204,5 @@ Nach der Installation könnte Ihre Verzeichnisstruktur so aussehen (Beispiel mit
 ### 1. Dateien entpacken und kopieren
 
 1. Entpacke beide ZIP-Archive:
-   - `protected.zip` → Inhalt in das WebRoot-Verzeichnis kopieren (z.B. `htdocs/` oder `www/`)
+   - `protected.zip` → Inhalt in das WebRoot-Verzeichnis kopieren
    - `secure-files.zip`
