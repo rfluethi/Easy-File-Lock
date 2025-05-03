@@ -18,8 +18,8 @@ Ein System zum Verwalten und Ausliefern geschützter Dateien in WordPress.
    - [secure-files.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/secure-files.zip)
 
 2. Entpacken Sie die Dateien:
-   - `protected/` in `public_html/` kopieren
-   - `secure-files/` außerhalb des WebRoots anlegen
+   - `protected/` in `public_html/` kopieren. Damit dieses Verzeichnis innerhalb des WebRoots platziert ist.
+   - `secure-files/` unterhalb `public_html/` damit das Verzeichnis außerhalb des WebRoots liegt.
 
 3. WordPress konfigurieren:
    ```php

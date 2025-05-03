@@ -1,4 +1,4 @@
-# Installation des Dateitresors
+# Installation
 
 ## Schnellstart Installation
 
@@ -17,7 +17,107 @@
 
 ### Detaillierte Anleitung
 
-Siehe [Installationsanleitung](docs/installation.md) für eine detaillierte Beschreibung.
+1. **Voraussetzungen**
+   - WordPress 5.0 oder höher
+   - PHP 7.4 oder höher
+   - Mindestens 128M PHP Memory-Limit
+   - Schreibrechte für Log-Verzeichnis
+
+2. **Verzeichnisstruktur einrichten**
+   ```bash
+   # WebRoot-Verzeichnis (z.B. public_html, htdocs, www)
+   /path/to/webroot/
+   └── protected/              # Aus protected.zip
+       ├── .htaccess
+       └── check-access.php
+
+   # Außerhalb des WebRoots
+   /path/to/
+   └── secure-files/          # Aus secure-files.zip
+       ├── config/
+       │   └── secure-config.php
+       ├── logs/
+       │   └── access.log
+       ├── group-1/
+       └── group-2/
+   ```
+
+3. **Berechtigungen setzen**
+   ```bash
+   # Verzeichnisse
+   chmod 755 secure-files
+   chmod 755 secure-files/config
+   chmod 755 secure-files/logs
+   chmod 755 secure-files/group-*
+
+   # Dateien
+   chmod 644 secure-files/config/secure-config.php
+   chmod 644 secure-files/logs/access.log
+   chmod 644 secure-files/group-*/*
+   ```
+
+4. **WordPress-Pfad konfigurieren**
+   ```php
+   // In secure-files/config/secure-config.php
+   
+   // Wenn WordPress direkt im WebRoot liegt
+   define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');
+   
+   // Wenn WordPress in einem Unterverzeichnis liegt
+   define('WP_CORE_PATH', dirname(__DIR__, 2) . '/main/wp-load.php');
+   ```
+
+5. **Debug-Modus (optional)**
+   ```php
+   // In secure-files/config/secure-config.php
+   define('DEBUG_MODE', true);  // Nur für Entwicklung!
+   ```
+
+6. **Testen**
+   - WordPress-Benutzer anmelden
+   - Datei über `/protected/group-1/example-1.pdf` aufrufen
+   - Log-Datei auf Fehler prüfen
+
+### Fehlerbehebung
+
+1. **403 Forbidden**
+   - WordPress-Benutzer eingeloggt?
+   - Richtige Benutzerrolle?
+   - Korrekte Verzeichnisstruktur?
+
+2. **404 Not Found**
+   - Datei existiert?
+   - Pfad korrekt?
+   - Berechtigungen richtig?
+
+3. **500 Internal Server Error**
+   - PHP-Version ≥ 7.4?
+   - Memory-Limit ≥ 128M?
+   - WordPress-Pfad korrekt?
+
+4. **Log-Datei prüfen**
+   ```bash
+   tail -f secure-files/logs/access.log
+   ```
+
+### Sicherheitshinweise
+
+1. **Verzeichnisstruktur**
+   - `secure-files/` MUSS außerhalb des WebRoots liegen
+   - Nur `protected/` ist von außen erreichbar
+
+2. **Berechtigungen**
+   - Minimale Berechtigungen verwenden
+   - Regelmäßig prüfen
+
+3. **Debug-Modus**
+   - Nur für Entwicklung aktivieren
+   - In Produktion deaktivieren
+
+4. **Updates**
+   - WordPress aktuell halten
+   - PHP-Version prüfen
+   - Sicherheits-Header validieren
 
 ## Verzeichnisstruktur
 
