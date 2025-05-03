@@ -1,25 +1,31 @@
 <?php
 /**
  * check-access.php  —  role-aware download gate
+ * Zugriffskontrolle für geschützte Dateien
+ * Diese Datei muss im WebRoot-Verzeichnis (z.B. protected/) liegen.
  */
 
-// PHP-Version prüfen
-if (version_compare(PHP_VERSION, '7.4.0', '<')) {
-    die('PHP 7.4 oder höher erforderlich');
-}
+// WordPress-Konfiguration
+define('WP_USE_THEMES', false);
 
-// Memory-Limit prüfen
+// ZUERST die Konfiguration laden!
+$config_file = dirname(dirname(__DIR__)) . '/secure-files/config/secure-config.php';
+if (!file_exists($config_file)) {
+    die('Fehler: Konfigurationsdatei nicht gefunden. Bitte Installation überprüfen.');
+}
+require_once $config_file;
+
+// Jetzt stehen alle Konstanten zur Verfügung
 $memory_limit = ini_get('memory_limit');
 if (intval($memory_limit) < intval(MIN_MEMORY_LIMIT)) {
     die('PHP Memory-Limit zu niedrig. Mindestens ' . MIN_MEMORY_LIMIT . ' erforderlich.');
 }
 
-// WordPress laden
-define('WP_USE_THEMES', false);         // skip WP theme bootstrap
-require_once WP_CORE_PATH;               // load WordPress core
-
-// Konfiguration laden
-require_once SECURE_FILE_PATH . '/config/secure-config.php';
+// Jetzt erst WordPress laden
+if (!file_exists(WP_CORE_PATH)) {
+    die('Fehler: WordPress nicht gefunden. Bitte Pfad in secure-config.php überprüfen.');
+}
+require_once WP_CORE_PATH;
 
 // Debug-Modus
 if (DEBUG_MODE) {
@@ -57,8 +63,11 @@ if (file_exists(LOG_FILE) && filesize(LOG_FILE) > LOG_MAX_SIZE) {
     rename(LOG_FILE, LOG_FILE . '.' . date('Y-m-d-H-i-s'));
 }
 
-// role → folder map (loaded from secure-config.php)
-$role_folders = require SECURE_FILE_PATH . '/config/secure-config.php';
+// Debug: Aktuelle Rollen loggen
+$current = wp_get_current_user();
+if (DEBUG_MODE) {
+    error_log('Aktuelle Rollen: ' . print_r($current->roles, true));
+}
 
 // only logged-in users
 if (!is_user_logged_in()) {
@@ -86,7 +95,6 @@ if (!preg_match('/^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/', $rel)) {
 }
 
 // role + folder check
-$current = wp_get_current_user();
 $roles = $current->roles;
 $allowed = false;
 foreach ($roles as $role) {
