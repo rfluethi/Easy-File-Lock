@@ -65,14 +65,14 @@ $role_mappings = [
 2. Überprüfe die Rollen-Konfiguration:
    ```php
    $role_folders = [
-       'subscriber' => 'group-1',    // seminar-website-basis
-       'contributor' => 'group-2'    // cv-interessent
+       'subscriber' => 'group-1',    // Zugriff auf example-1.pdf
+       'contributor' => 'group-2'    // Zugriff auf example-2.pdf
    ];
    ```
 3. Stelle sicher, dass die Datei im richtigen Ordner liegt:
    ```
-   /secure-files/group-1/index.html  # für subscriber
-   /secure-files/group-2/document.pdf # für contributor
+   /secure-files/group-1/example-1.pdf  # für Subscriber
+   /secure-files/group-2/example-2.pdf  # für Contributor
    ```
 
 ### Endlose Weiterleitung

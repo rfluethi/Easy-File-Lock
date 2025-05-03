@@ -83,19 +83,16 @@ secure-files/
 ├── config/
 │   └── secure-config.php
 ├── group-1/
-│   ├── example-1.pdf    # Beispiel für Subscriber-Zugriff
+│   ├── example-1.pdf    # Beispiel für Subscriber
 │   └── [weitere Dateien für Subscriber]
 └── group-2/
-    ├── example-2.pdf    # Beispiel für Contributor-Zugriff
+    ├── example-2.pdf    # Beispiel für Contributor
     └── [weitere Dateien für Contributor]
 ```
 
 ## 2. Konfiguration
 
-### 2.1 Rollenzuordnungen
-
-Konfigurieren Sie die Rollenzuordnungen in `secure-config.php`:
-
+### 2.1 Rollenzuordnung
 ```php
 $role_mappings = [
     'subscriber' => 'group-1',    // Zugriff auf example-1.pdf
@@ -133,8 +130,8 @@ public_html/
 /secure-files/          # Geschützte Dateien (außerhalb von public_html)
 ├── config/
 │   └── secure-config.php
-├── group-1/           # seminar-website-basis
-└── group-2/           # cv-interessent
+├── group-1/           # Beispiel für Subscriber
+└── group-2/           # Beispiel für Contributor
 ```
 
 ### 3. WordPress-Konfiguration
@@ -147,8 +144,8 @@ public_html/
 
    // Rollen und ihre zugehörigen Ordner
    $role_folders = [
-       'subscriber' => 'group-1',    // seminar-website-basis
-       'contributor' => 'group-2'    // cv-interessent
+       'subscriber' => 'group-1',    // Zugriff auf example-1.pdf
+       'contributor' => 'group-2'    // Zugriff auf example-2.pdf
    ];
 
    // Download-Einstellungen

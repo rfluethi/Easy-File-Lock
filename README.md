@@ -32,9 +32,11 @@ Siehe [Installationsanleitung](docs/installation.md) für eine detaillierte Besc
 
 ## Dokumentation
 
-- [Technische Dokumentation](docs/technical.md)
-- [Konfiguration](docs/configuration.md)
-- [Fehlerbehebung](docs/troubleshooting.md)
+- [Technische Dokumentation](docs/technical.md) - Detaillierte technische Informationen
+- [Konfiguration](docs/configuration.md) - Konfigurationsmöglichkeiten
+- [Fehlerbehebung](docs/troubleshooting.md) - Lösungen für häufige Probleme
+- [Sicherheit](docs/security.md) - Sicherheitshinweise und Best Practices
+- [Changelog](docs/changelog.md) - Versionshistorie
 
 ## Releases
 
