@@ -1,5 +1,9 @@
 # Installation
 
+## Was ist das WebRoot-Verzeichnis?
+
+Der WebRoot ist das Hauptverzeichnis auf einem Webserver, in dem z. B. eine WordPress-Installation liegen muss, damit sie im Internet erreichbar ist. Typische Namen sind *htdocs*, *www*, *html* oder *public_html*. Mit einem Browser kann nicht auf Dateien außerhalb dieses Verzeichnisses zugegriffen werden.
+
 ## Schnellstart Installation
 
 1. Release-Dateien herunterladen:
