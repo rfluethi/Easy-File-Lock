@@ -7,11 +7,12 @@
    - [secure-files.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/secure-files.zip)
 
 2. Dateien entpacken und kopieren:
-   - `protected.zip` → Inhalt in das WebRoot-Verzeichnis kopieren (z.B. `public_html/`, `htdocs/` oder `www/`)
+   - `protected.zip` → Inhalt in das WebRoot-Verzeichnis kopieren (z.B. `htdocs/` oder `www/`)
    - `secure-files.zip` → Inhalt außerhalb des WebRoots kopieren
 
 3. WordPress konfigurieren:
    ```php
+   // In wp-config.php
    define('SECURE_FILE_PATH', dirname(dirname(ABSPATH)) . '/secure-files');
    ```
 
@@ -25,7 +26,7 @@
 
 2. **Verzeichnisstruktur einrichten**
    ```bash
-   # WebRoot-Verzeichnis (z.B. public_html, htdocs, www)
+   # WebRoot-Verzeichnis (z.B. htdocs, www)
    /path/to/webroot/
    └── protected/              # Aus protected.zip
        ├── .htaccess
@@ -56,44 +57,57 @@
    chmod 644 secure-files/group-*/*
    ```
 
-4. **WordPress-Pfad konfigurieren**
+4. **Konfiguration anpassen**
+
+   a. WordPress-Konfiguration (`wp-config.php`):
    ```php
-   // In secure-files/config/secure-config.php
-   
-   // Wenn WordPress direkt im WebRoot liegt
-   define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/wp-load.php');
-   
-   // Wenn WordPress in einem Unterverzeichnis liegt
-   define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/wordpress/wp-load.php');
+   // Pfad zum geschützten Dateiverzeichnis
+   define('SECURE_FILE_PATH', dirname(dirname(ABSPATH)) . '/secure-files');
    ```
 
-5. **Debug-Modus (optional)**
+   b. Secure-Config (`secure-files/config/secure-config.php`):
    ```php
-   // In secure-files/config/secure-config.php
-   define('DEBUG_MODE', true);  // Nur für Entwicklung!
+   // WordPress-Pfad (flexibel)
+   define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wordpress/wp-load.php');  // Wenn WordPress in /wordpress/ liegt
+   // Alternative: define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');  // Wenn WordPress direkt im WebRoot liegt
+
+   // Logging-Konfiguration
+   define('LOG_DIR', dirname(__DIR__) . '/logs');
+   define('LOG_FILE', LOG_DIR . '/access.log');
+
+   // Rollen und ihre zugehörigen Ordner
+   $role_folders = [
+       'subscriber' => 'group-1',    // Zugriff auf example-1.pdf
+       'contributor' => 'group-2'    // Zugriff auf example-2.pdf
+   ];
+
+   // Download-Einstellungen
+   define('MAX_DIRECT_DOWNLOAD_SIZE', 1048576);  // 1 MB
+   define('CHUNK_SIZE', 4194304);               // 4 MB
+   define('MIN_MEMORY_LIMIT', '128M');          // Minimale PHP Memory-Limit
    ```
 
-6. **Testen**
+5. **Testen**
    - WordPress-Benutzer anmelden
    - Datei über `/protected/group-1/example-1.pdf` aufrufen
    - Log-Datei auf Fehler prüfen
 
 ### Fehlerbehebung
 
-1. **403 Forbidden**
-   - WordPress-Benutzer eingeloggt?
-   - Richtige Benutzerrolle?
-   - Korrekte Verzeichnisstruktur?
+1. **"Undefined constant MIN_MEMORY_LIMIT"**
+   - Überprüfe, ob `secure-config.php` vor der Verwendung geladen wird
+   - Überprüfe den Pfad zu `secure-config.php`
+   - Stelle sicher, dass die Datei existiert und lesbar ist
 
-2. **404 Not Found**
-   - Datei existiert?
-   - Pfad korrekt?
-   - Berechtigungen richtig?
+2. **"WordPress nicht gefunden"**
+   - Überprüfe den Pfad in `secure-config.php`
+   - Stelle sicher, dass `wp-load.php` existiert
+   - Prüfe die Berechtigungen
 
-3. **500 Internal Server Error**
-   - PHP-Version ≥ 7.4?
-   - Memory-Limit ≥ 128M?
-   - WordPress-Pfad korrekt?
+3. **"Konfigurationsdatei nicht gefunden"**
+   - Überprüfe die Verzeichnisstruktur
+   - Stelle sicher, dass `secure-files` außerhalb des WebRoots liegt
+   - Prüfe die Berechtigungen
 
 4. **Log-Datei prüfen**
    ```bash
@@ -140,11 +154,11 @@ Website-Access-Control-Basic/
 ```
 
 ### Beispiel-Installations-Struktur
-Nach der Installation könnte Ihre Verzeichnisstruktur so aussehen (Beispiel mit `public_html` als WebRoot):
+Nach der Installation könnte Ihre Verzeichnisstruktur so aussehen (Beispiel mit `htdocs` als WebRoot):
 
 ```
 /var/www/                      # Server-Root
-├── public_html/               # WebRoot (von außen erreichbar)
+├── htdocs/                    # WebRoot (von außen erreichbar)
 │   ├── main/                  # WordPress-Installation
 │   └── protected/             # Kopiert aus protected.zip
 │       ├── .htaccess          # URL-Weiterleitung
@@ -161,7 +175,7 @@ Nach der Installation könnte Ihre Verzeichnisstruktur so aussehen (Beispiel mit
 ```
 
 **Hinweis:**  
-- Der Name des WebRoot-Verzeichnisses kann je nach Hosting-Provider variieren (`public_html`, `htdocs`, `www`, etc.)
+- Der Name des WebRoot-Verzeichnisses kann je nach Hosting-Provider variieren (`htdocs`, `www`, etc.)
 - Wichtig ist nur, dass `secure-files` **außerhalb** des WebRoots liegt
 - Die WordPress-Installation kann direkt im WebRoot oder in einem Unterverzeichnis liegen
 
@@ -189,109 +203,5 @@ Nach der Installation könnte Ihre Verzeichnisstruktur so aussehen (Beispiel mit
 ### 1. Dateien entpacken und kopieren
 
 1. Entpacke beide ZIP-Archive:
-   - `protected.zip` → Inhalt in das WebRoot-Verzeichnis kopieren (z.B. `public_html/`, `htdocs/` oder `www/`)
-   - `secure-files.zip` → Inhalt außerhalb des WebRoots kopieren
-
-2. Überprüfe die Verzeichnisstruktur:
-   - In `public_html/` sollte ein `protected/` Ordner sein
-   - Außerhalb des WebRoots sollte ein `secure-files/` Ordner sein
-   - Erstelle das `logs` Verzeichnis in `secure-files/` falls nicht vorhanden
-
-3. Setze die Berechtigungen:
-   ```bash
-   chmod 755 secure-files/logs
-   chmod 644 secure-files/logs/access.log
-   ```
-
-### 2. Konfiguration anpassen
-
-1. Öffne die Datei `secure-files/config/secure-config.php`
-2. Passe die Konfiguration an:
-   ```php
-   // WordPress-Pfad (wenn WordPress in /public_html/wordpress/ liegt)
-   define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/wordpress/wp-load.php');
-
-   // Logging-Konfiguration
-   define('LOG_DIR', dirname(__DIR__) . '/logs');
-   define('LOG_FILE', LOG_DIR . '/access.log');
-
-   // Rollen und ihre zugehörigen Ordner
-   $role_folders = [
-       'subscriber' => 'group-1',    // Zugriff auf example-1.pdf
-       'contributor' => 'group-2'    // Zugriff auf example-2.pdf
-   ];
-
-   // Download-Einstellungen
-   define('MAX_DIRECT_DOWNLOAD_SIZE', 1048576);  // 1 MB
-   define('CHUNK_SIZE', 4194304);               // 4 MB
-   ```
-
-3. Öffne die WordPress-Konfigurationsdatei `wp-config.php` und füge folgende Zeile hinzu:
-   ```php
-   // Pfad zum geschützten Dateiverzeichnis
-   define('SECURE_FILE_PATH', dirname(dirname(ABSPATH)) . '/secure-files');
-   ```
-
-**Wichtig:**  
-- Die Konfigurationsdatei muss vor dem Laden von WordPress eingebunden werden
-- Der Pfad zu `wp-load.php` muss absolut korrekt sein
-- Bei einem Fehler "Undefined constant WP_CORE_PATH" ist der Pfad in `secure-config.php` falsch
-- Der Eintrag in `wp-config.php` ist **zwingend erforderlich**
-- Das Log-Verzeichnis muss beschreibbar sein
-
-**Hinweis:**  
-- Wenn WordPress in einem Unterverzeichnis liegt (z.B. `/public_html/wordpress/`), verwende:
-  ```php
-  define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/wordpress/wp-load.php');
-  ```
-- Wenn WordPress direkt in `public_html` liegt, verwende:
-  ```php
-  define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/wp-load.php');
-  ```
-
-**Detaillierte Konfiguration:**  
-Für eine vollständige Übersicht aller Konfigurationsmöglichkeiten siehe [Konfigurationsdokumentation](configuration.md).
-
-### 3. Erster Praxistest
-
-1. Melde dich von WordPress ab.
-2. Rufe eine der Beispieldateien im Browser auf:
-   ```
-   https://deine-domain.tld/protected/group-1/example-1.pdf  # für Subscriber
-   ```
-   oder
-   ```
-   https://deine-domain.tld/protected/group-2/example-2.pdf  # für Contributor
-   ```
-3. Du solltest das Login-Formular sehen. Nach dem Einloggen erscheint die geschützte Datei.
-
-**Fehlerbehebung:**
-- Bei "Undefined constant WP_CORE_PATH": Überprüfe den Pfad in `secure-config.php`
-- Bei 404-Fehlern: Überprüfe die Verzeichnisstruktur und Berechtigungen
-- Bei 403-Fehlern: Überprüfe die WordPress-Rollen und -Berechtigungen
-- Bei Logging-Fehlern: Überprüfe die Berechtigungen des Log-Verzeichnisses
-
-**Glückwunsch, dein Tresor funktioniert!**
-
-## Deinstallation
-
-### 1. Dateien entfernen
-1. `protected` Ordner aus `public_html` löschen
-2. `secure-files` Ordner sichern (falls benötigt)
-3. `secure-files` Ordner löschen
-
-### 2. WordPress-Konfiguration
-1. `wp-config.php` öffnen
-2. `SECURE_FILE_PATH` Definition entfernen
-
-### 3. Aufräumen
-1. Temporäre Dateien löschen
-2. Cache leeren
-3. Logs sichern
-
-## Fehlerhilfe
-
-- **404-Fehler:** Pfad in der URL stimmt nicht mit den Ordnern in `secure-files` überein.
-- **Endlose Weiterleitung:** Prüfe Cookies (`www` ↔ ohne `www`) oder den Pfad zu `wp-load.php`.
-- **Abgebrochene Downloads:** Erhöhe im Skript die Zeile `fread($fp, 1048576)` z. B. auf `4194304`.
-- **Logging-Fehler:** Überprüfe die Berechtigungen des Log-Verzeichnisses und der Log-Datei. 
+   - `protected.zip` → Inhalt in das WebRoot-Verzeichnis kopieren (z.B. `htdocs/` oder `www/`)
+   - `secure-files.zip`

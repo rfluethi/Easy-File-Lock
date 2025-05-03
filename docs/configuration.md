@@ -1,17 +1,41 @@
 # Konfigurationsdokumentation
 
-## 1. WordPress-Pfad
+## 1. Wichtige Hinweise
 
-### 1.1 Standard-Konfiguration
+### 1.1 Lade-Reihenfolge
+Die Reihenfolge der Einbindungen ist **kritisch**:
+1. `secure-config.php` MUSS zuerst geladen werden
+2. Erst dann dürfen Konstanten wie `MIN_MEMORY_LIMIT` verwendet werden
+3. WordPress wird erst danach geladen
+
+### 1.2 Fehlerbehandlung
 ```php
-// Wenn WordPress in einem Unterverzeichnis des WebRoots liegt (z.B. /wordpress/)
+// In check-access.php
+$config_file = dirname(__DIR__, 2) . '/secure-files/config/secure-config.php';
+if (!file_exists($config_file)) {
+    die('Fehler: Konfigurationsdatei nicht gefunden. Bitte Installation überprüfen.');
+}
+require_once $config_file;
+
+// Jetzt erst WordPress laden
+if (!file_exists(WP_CORE_PATH)) {
+    die('Fehler: WordPress nicht gefunden. Bitte Pfad in secure-config.php überprüfen.');
+}
+require_once WP_CORE_PATH;
+```
+
+## 2. WordPress-Pfad
+
+### 2.1 Standard-Konfiguration
+```php
+// Wenn WordPress in einem Unterverzeichnis liegt
 define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wordpress/wp-load.php');
 
 // Wenn WordPress direkt im WebRoot liegt
 define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');
 ```
 
-### 1.2 Pfadberechnung
+### 2.2 Pfadberechnung
 - `dirname(__DIR__, 2)` geht zwei Verzeichnisse hoch
 - Bei WordPress in einem Unterverzeichnis:
   - Start: `/path/to/secure-files/config/`
@@ -23,9 +47,9 @@ define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');
 - Der Name des WebRoot-Verzeichnisses spielt keine Rolle
 - Wichtig ist nur der relative Pfad von `secure-files` zu WordPress
 
-## 2. Rollenzuordnung
+## 3. Rollenzuordnung
 
-### 2.1 Standard-Konfiguration
+### 3.1 Standard-Konfiguration
 ```php
 $role_folders = [
     'subscriber' => 'group-1',    // Zugriff auf example-1.pdf
@@ -33,7 +57,7 @@ $role_folders = [
 ];
 ```
 
-### 2.2 Eigene Rollen hinzufügen
+### 3.2 Eigene Rollen hinzufügen
 ```php
 $role_folders = [
     'subscriber' => 'group-1',
@@ -43,15 +67,15 @@ $role_folders = [
 ];
 ```
 
-## 3. Download-Einstellungen
+## 4. Download-Einstellungen
 
-### 3.1 Standard-Konfiguration
+### 4.1 Standard-Konfiguration
 ```php
 define('MAX_DIRECT_DOWNLOAD_SIZE', 524288);  // 512 KB
 define('CHUNK_SIZE', 1048576);              // 1 MB
 ```
 
-### 3.2 Anpassung der Chunk-Größe
+### 4.2 Anpassung der Chunk-Größe
 ```php
 // Für schnellere Downloads
 define('CHUNK_SIZE', 4194304);  // 4 MB
@@ -60,31 +84,31 @@ define('CHUNK_SIZE', 4194304);  // 4 MB
 define('CHUNK_SIZE', 524288);   // 512 KB
 ```
 
-## 4. Debug-Modus
+## 5. Debug-Modus
 
-### 4.1 Aktivierung
+### 5.1 Aktivierung
 ```php
 define('DEBUG_MODE', true);
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 ```
 
-### 4.2 Logging
+### 5.2 Logging
 ```php
 error_log('Debug: ' . $message);
 error_log('Chunk: ' . $chunk_number . ' von ' . $total_chunks);
 ```
 
-## 5. Sicherheit
+## 6. Sicherheit
 
-### 5.1 Cache-Header
+### 6.1 Cache-Header
 ```php
 header('Cache-Control: private, no-cache, no-store, must-revalidate');
 header('Pragma: no-cache');
 header('Expires: 0');
 ```
 
-### 5.2 MIME-Type-Validierung
+### 6.2 MIME-Type-Validierung
 ```php
 $allowed_mimes = [
     'application/pdf',
@@ -93,26 +117,26 @@ $allowed_mimes = [
 ];
 ```
 
-## 6. Fehlerbehebung
+## 7. Fehlerbehebung
 
-### 6.1 Pfadprobleme
+### 7.1 Pfadprobleme
 - Überprüfe den WordPress-Pfad in `secure-config.php`
 - Stelle sicher, dass die Verzeichnisstruktur korrekt ist
 - Prüfe die Berechtigungen der Verzeichnisse
 
-### 6.2 Zugriffsprobleme
+### 7.2 Zugriffsprobleme
 - Überprüfe die Rollenzuordnung
 - Stelle sicher, dass die Benutzer die richtigen Rollen haben
 - Prüfe die WordPress-Authentifizierung
 
-### 6.3 Download-Probleme
+### 7.3 Download-Probleme
 - Überprüfe die Chunk-Größe
 - Stelle sicher, dass genügend Arbeitsspeicher verfügbar ist
 - Prüfe die PHP-Konfiguration (memory_limit, max_execution_time)
 
-## 2. Logging-Konfiguration
+## 8. Logging-Konfiguration
 
-### 2.1 Standard-Konfiguration
+### 8.1 Standard-Konfiguration
 ```php
 // Logging-Verzeichnis und Datei
 define('LOG_DIR', dirname(__DIR__) . '/logs');
@@ -122,7 +146,7 @@ define('LOG_FILE', LOG_DIR . '/access.log');
 define('DEBUG_MODE', false);
 ```
 
-### 2.2 Logging-Funktion
+### 8.2 Logging-Funktion
 ```php
 function secure_log($message) {
     if (DEBUG_MODE) {
@@ -131,7 +155,7 @@ function secure_log($message) {
 }
 ```
 
-### 2.3 Log-Inhalte
+### 8.3 Log-Inhalte
 - Benutzerrollen und Zugriffsversuche
 - Dateiübertragungen und Chunk-Übertragungen
 - Fehler und Warnungen

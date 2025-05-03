@@ -17,29 +17,26 @@ secure-files/                  # Außerhalb des WebRoots (nicht erreichbar)
     └── [weitere Dateien für Contributor]
 ```
 
-**Hinweis:**  
-- Die Dateien aus `protected/` werden in das WebRoot-Verzeichnis kopiert
-- `secure-files/` muss außerhalb des WebRoots liegen
-- Der Name des WebRoot-Verzeichnisses kann variieren (`public_html`, `htdocs`, `www`, etc.)
+### 1.2 Datei-Lade-Reihenfolge
+1. `check-access.php` wird aufgerufen
+2. `secure-config.php` wird geladen (MUSS zuerst geladen werden!)
+3. Konstanten werden geprüft (z.B. `MIN_MEMORY_LIMIT`)
+4. WordPress wird geladen
+5. Zugriffskontrolle wird durchgeführt
+6. Datei wird bereitgestellt
 
-### 1.2 Berechtigungen
+### 1.3 Berechtigungen
 - `secure-files/`: 755 (drwxr-xr-x)
 - `secure-files/config/`: 755 (drwxr-xr-x)
 - `secure-files/logs/`: 755 (drwxr-xr-x)
 - `secure-files/logs/access.log`: 644 (-rw-r--r--)
 - `secure-files/group-*/*`: 644 (-rw-r--r--)
 
-### 1.3 Log-Rotation
+### 1.4 Log-Rotation
 - Log-Dateien werden bei 5 MB Größe rotiert
 - Alte Log-Dateien werden mit Zeitstempel umbenannt
 - Maximal 5 Log-Dateien werden behalten
 - Älteste Log-Datei wird automatisch gelöscht
-
-### 1.4 Dateiübertragung
-- Direkte Downloads bis 1 MB
-- Chunked Downloads für größere Dateien (4 MB Chunks)
-- Optimierte Pufferung und Flush-Mechanismen
-- Fortschrittsüberwachung im Debug-Modus
 
 ### 1.5 Beispiel-URLs
 - Subscriber-Zugriff: `/protected/group-1/example-1.pdf`
@@ -49,11 +46,11 @@ secure-files/                  # Außerhalb des WebRoots (nicht erreichbar)
 
 ### 2.1 WordPress-Pfad
 ```php
-// Wenn WordPress in /public_html/wordpress/ liegt
-define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/wordpress/wp-load.php');
+// Wenn WordPress in einem Unterverzeichnis liegt
+define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wordpress/wp-load.php');
 
-// Wenn WordPress direkt in public_html liegt
-define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/wp-load.php');
+// Wenn WordPress direkt im WebRoot liegt
+define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');
 ```
 
 ### 2.2 Rollenzuordnung
