@@ -36,23 +36,47 @@
 
 ## Installation
 
-### 1. Ordnerstruktur anlegen
+## 1. Verzeichnisstruktur
 
-1. Melde dich per FTP oder Datei-Manager auf deinem Webspace an.
-2. Wechsle **eine Ebene höher** als `public_html`.
-3. Lege dort den Ordner **`secure-files`** an.
-4. Erstelle die Gruppenordner:
-   ```
-   /secure-files/
-   ├── config/
-   │   └── secure-config.php
-   ├── group-1/           # seminar-website-basis
-   └── group-2/           # cv-interessent
-   ```
-5. Kopiere alle geschützten Dateien in die entsprechenden Gruppenordner, z. B.:
-   - `secure-files/group-1/index.html`
-   - `secure-files/group-1/praesentation.pdf`
-   - `secure-files/group-2/document.pdf`
+Erstellen Sie die folgende Verzeichnisstruktur:
+
+```
+secure-files/
+├── config/
+│   └── secure-config.php
+├── group-1/
+│   ├── example-1.pdf    # Beispiel für Subscriber-Zugriff
+│   └── [weitere Dateien für Subscriber]
+└── group-2/
+    ├── example-2.pdf    # Beispiel für Contributor-Zugriff
+    └── [weitere Dateien für Contributor]
+```
+
+## 2. Konfiguration
+
+### 2.1 Rollenzuordnungen
+
+Konfigurieren Sie die Rollenzuordnungen in `secure-config.php`:
+
+```php
+$role_mappings = [
+    'subscriber' => 'group-1',    // Zugriff auf example-1.pdf
+    'contributor' => 'group-2'    // Zugriff auf example-2.pdf
+];
+```
+
+### 2.2 Berechtigungen
+
+Setzen Sie die korrekten Berechtigungen:
+
+```bash
+chmod 755 secure-files
+chmod 755 secure-files/config
+chmod 755 secure-files/group-1
+chmod 755 secure-files/group-2
+chmod 644 secure-files/group-1/example-1.pdf
+chmod 644 secure-files/group-2/example-2.pdf
+```
 
 ### 2. Schutz-Ordner hochladen
 
@@ -106,13 +130,13 @@ define( 'SECURE_FILE_PATH', dirname( ABSPATH ) . '/secure-files' );
 ### 4. Erster Praxistest
 
 1. Melde dich von WordPress ab.
-2. Rufe eine geschützte Datei im Browser auf, z. B.:
+2. Rufe eine der Beispieldateien im Browser auf:
    ```
-   https://deine-domain.tld/protected/group-1/index.html
+   https://deine-domain.tld/protected/group-1/example-1.pdf  # für Subscriber
    ```
    oder
    ```
-   https://deine-domain.tld/protected/group-2/document.pdf
+   https://deine-domain.tld/protected/group-2/example-2.pdf  # für Contributor
    ```
 3. Du solltest das Login-Formular sehen. Nach dem Einloggen erscheint die geschützte Datei.
 

@@ -9,10 +9,10 @@
 // WordPress-Pfad
 define('WP_CORE_PATH', dirname(__DIR__) . '/wordpress/wp-load.php');
 
-// Rollen und ihre zugehörigen Ordner
-$role_folders = [
-    'subscriber' => 'group-1',    // seminar-website-basis
-    'contributor' => 'group-2'    // cv-interessent
+// Rollenzuordnungen
+$role_mappings = [
+    'subscriber' => 'group-1',
+    'contributor' => 'group-2'
 ];
 
 // Download-Einstellungen

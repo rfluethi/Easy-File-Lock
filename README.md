@@ -1,28 +1,51 @@
 # Website Access Control Basic
 
-Ein Verwalten und Ausliefern geschützter Dateien in WordPress.
+Ein sicheres System zum Verwalten und Ausliefern geschützter Dateien in WordPress.
 
-## Hintergrund
+## Features
 
-Dieses Projekt bietet eine schlanke PHP-basierte Lösung, um Dateien in WordPress nur bestimmten Benutzergruppen zugänglich zu machen – ohne überladene Plugins. Die Anfrage wird über eine .htaccess-Regel an ein Prüfskript weitergeleitet, das die Berechtigungen kontrolliert und Dateien aus einem geschützten Verzeichnis bei Bedarf ausliefert. Die Konfiguration erfolgt zentral über eine PHP-Datei. Die Lösung ist bewusst einfach gehalten und kann flexibel an eigene Serverumgebungen angepasst werden.
+- Sichere Speicherung von Dateien außerhalb des WebRoots
+- Rollenbasierte Zugriffskontrolle
+- Effizientes Streaming großer Dateien
+- Schutz vor unbefugtem Zugriff
 
-## Schnellstart
+## Installation
 
-1. [Installation durchführen](docs/installation.md)
-2. [Konfiguration anpassen](docs/configuration.md)
-3. Geschützte Dateien in den `secure-files` Ordner kopieren
-4. Zugriff über `/protected/` testen
+### Schnellstart
+
+1. Laden Sie die aktuellen Release-Dateien herunter:
+   - [protected.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/protected.zip)
+   - [secure-files.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/secure-files.zip)
+
+2. Entpacken Sie die Dateien:
+   - `protected/` in `public_html/` kopieren
+   - `secure-files/` außerhalb des WebRoots anlegen
+
+3. WordPress konfigurieren:
+   ```php
+   define('SECURE_FILE_PATH', dirname(dirname(ABSPATH)) . '/secure-files');
+   ```
+
+### Detaillierte Anleitung
+
+Siehe [Installationsanleitung](docs/installation.md) für eine detaillierte Beschreibung.
 
 ## Dokumentation
 
-Die vollständige Dokumentation findest du im `docs/` Verzeichnis:
+- [Technische Dokumentation](docs/technical.md)
+- [Konfiguration](docs/configuration.md)
+- [Fehlerbehebung](docs/troubleshooting.md)
 
-- [Installation](docs/installation.md) - Schritt-für-Schritt-Anleitung
-- [Konfiguration](docs/configuration.md) - Einstellungsmöglichkeiten
-- [Technische Details](docs/technical.md) - Funktionsweise
-- [Fehlerbehebung](docs/troubleshooting.md) - Lösungen für Probleme
-- [Sicherheit](docs/security.md) - Sicherheitshinweise
-- [Changelog](docs/changelog.md) - Versionshistorie
+## Releases
+
+### Aktuelle Version
+- Version: [v1.0.0](https://github.com/your-username/Website-Access-Control-Basic/releases/latest)
+- Downloads:
+  - [protected.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/protected.zip)
+  - [secure-files.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/secure-files.zip)
+
+### Ältere Versionen
+Alle Releases finden Sie in der [Release-Übersicht](https://github.com/your-username/Website-Access-Control-Basic/releases).
 
 ## Bekannte Probleme
 

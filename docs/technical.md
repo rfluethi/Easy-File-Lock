@@ -23,22 +23,39 @@ Der Dateitresor ist ein sicheres System zum Verwalten und Ausliefern geschützte
 
 ## Systemarchitektur
 
-### Komponenten
+### 1.1 Verzeichnisstruktur
+```
+secure-files/
+├── config/
+│   └── secure-config.php
+├── group-1/
+│   ├── example-1.pdf    # Beispiel für Subscriber-Zugriff
+│   └── [weitere Dateien für Subscriber]
+└── group-2/
+    ├── example-2.pdf    # Beispiel für Contributor-Zugriff
+    └── [weitere Dateien für Contributor]
+```
 
-1. **Dateisystem**
-   - Geschützter Speicherort außerhalb des WebRoots
-   - Rollenbasierte Ordnerstruktur
-   - Konfigurationsdateien
+### 1.2 Dateiübertragung
+- Direkte Downloads bis 1 MB
+- Chunked Downloads für größere Dateien (4 MB Chunks)
+- Optimierte Pufferung und Flush-Mechanismen
+- Fortschrittsüberwachung im Debug-Modus
 
-2. **Webserver**
-   - `.htaccess` für URL-Weiterleitung
-   - PHP-Ausführung verhindert
-   - Verzeichnisauflistung deaktiviert
+### 1.3 Sicherheitsmaßnahmen
+- Strikte MIME-Type-Validierung
+- Erweiterte Sicherheits-Header:
+  - X-Content-Type-Options
+  - X-Frame-Options
+  - X-XSS-Protection
+  - Referrer-Policy
+  - Content-Security-Policy
+- Rollenbasierte Zugriffskontrolle
+- Cache-Kontrolle
 
-3. **WordPress-Integration**
-   - Authentifizierung
-   - Rollenverwaltung
-   - Pfadkonfiguration
+### 1.3 Beispiel-URLs
+- Subscriber-Zugriff: `/protected/group-1/example-1.pdf`
+- Contributor-Zugriff: `/protected/group-2/example-2.pdf`
 
 ## Dateisystem-Struktur
 
@@ -179,8 +196,8 @@ $role_folders = [
 ];
 
 // Download-Einstellungen
-define('MAX_DIRECT_DOWNLOAD_SIZE', 524288);  // 512 KB
-define('CHUNK_SIZE', 1048576);              // 1 MB
+define('MAX_DIRECT_DOWNLOAD_SIZE', 1048576);  // 1 MB
+define('CHUNK_SIZE', 4194304);               // 4 MB
 
 // Erlaubte Dateiendungen und ihre MIME-Types
 $allowed_mime_types = [
@@ -328,7 +345,7 @@ sequenceDiagram
     participant F as Dateisystem
 
     B->>A: Anfrage geschützte Datei
-    Note over B: z.B. /protected/group-1/index.html
+    Note over B: z.B. /protected/group-1/example-1.pdf
     A->>C: Weiterleitung via .htaccess
     
     C->>W: WordPress laden
@@ -353,7 +370,7 @@ sequenceDiagram
         C->>B: 404 Not Found
     else Erfolg
         C->>F: Datei öffnen
-        Note over F: /secure-files/group-1/index.html
+        Note over F: /secure-files/group-1/example-1.pdf
         F-->>C: Datei-Handle
         
         loop Chunk-Streaming

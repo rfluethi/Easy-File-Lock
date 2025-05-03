@@ -2,7 +2,25 @@
 
 Hier findest du Lösungen für häufige Probleme und Fehlermeldungen.
 
-## Zugriffsprobleme
+## 1. Häufige Probleme
+
+### 1.1 Zugriffsprobleme
+
+#### Problem: Benutzer kann nicht auf Dateien zugreifen
+- Überprüfen Sie die Rollenzuordnung in `secure-config.php`:
+```php
+$role_mappings = [
+    'subscriber' => 'group-1',    // Zugriff auf example-1.pdf
+    'contributor' => 'group-2'    // Zugriff auf example-2.pdf
+];
+```
+- Stellen Sie sicher, dass der Benutzer die korrekte WordPress-Rolle hat
+- Überprüfen Sie die Verzeichnisberechtigungen
+
+#### Problem: Datei wird nicht gefunden
+- Überprüfen Sie den Dateipfad (z.B. `/protected/group-1/example-1.pdf`)
+- Stellen Sie sicher, dass die Datei im richtigen Gruppenverzeichnis liegt
+- Überprüfen Sie die Dateiberechtigungen (644 für PDF-Dateien)
 
 ### 404 - Datei nicht gefunden
 
@@ -11,18 +29,20 @@ Hier findest du Lösungen für häufige Probleme und Fehlermeldungen.
 - Datei existiert, ist aber nicht erreichbar
 
 **Mögliche Ursachen:**
-1. Falscher Pfad in der URL
+1. Falscher Pfad in der URL (z.B. `/protected/group-1/example-1.pdf`)
 2. Datei liegt nicht im richtigen Ordner
 3. WordPress-Konstante `SECURE_FILE_PATH` ist falsch gesetzt
 
 **Lösungen:**
 1. Prüfe die URL-Struktur:
    ```
-   https://deine-domain.tld/protected/group-1/index.html
+   https://deine-domain.tld/protected/group-1/example-1.pdf  # für Subscriber
+   https://deine-domain.tld/protected/group-2/example-2.pdf  # für Contributor
    ```
 2. Stelle sicher, dass die Datei im richtigen Ordner liegt:
    ```
-   /secure-files/group-1/index.html
+   /secure-files/group-1/example-1.pdf  # für Subscriber
+   /secure-files/group-2/example-2.pdf  # für Contributor
    ```
 3. Überprüfe die `wp-config.php`:
    ```php

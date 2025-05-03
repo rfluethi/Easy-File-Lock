@@ -2,25 +2,45 @@
 
 In diesem Abschnitt erfährst du, wie du den Dateitresor für deine WordPress-Installation korrekt konfigurierst.
 
-## Grundlegende Konfiguration
+## 1. Rollenzuordnungen
 
-### 1. Rollen-Konfiguration
-
-Definiere in `secure-config.php` die Zuordnung von WordPress-Rollen zu Ordnern:
+Die Rollenzuordnungen definieren, welche Benutzerrolle auf welches Verzeichnis zugreifen kann:
 
 ```php
-$role_folders = [
-    'subscriber' => 'group-1',    // seminar-website-basis
-    'contributor' => 'group-2'    // cv-interessent
+$role_mappings = [
+    'subscriber' => 'group-1',    // Zugriff auf example-1.pdf
+    'contributor' => 'group-2'    // Zugriff auf example-2.pdf
 ];
 ```
 
-**Wichtige Hinweise:**
-- Die Rollen-Namen müssen exakt mit den WordPress-Rollen übereinstimmen
-- Die Ordner-Namen dürfen keine Leerzeichen oder Sonderzeichen enthalten
-- Jede Rolle kann nur einem Ordner zugeordnet werden
+## 2. Verzeichnisstruktur
 
-### 2. Erlaubte Dateitypen
+Die geschützten Dateien werden in den entsprechenden Gruppenverzeichnissen gespeichert:
+
+```
+secure-files/
+├── config/
+│   └── secure-config.php
+├── group-1/
+│   ├── example-1.pdf    # Beispiel für Subscriber-Zugriff
+│   └── [weitere Dateien für Subscriber]
+└── group-2/
+    ├── example-2.pdf    # Beispiel für Contributor-Zugriff
+    └── [weitere Dateien für Contributor]
+```
+
+## 3. Beispiel-URLs
+
+Die geschützten Dateien sind über folgende URLs erreichbar:
+
+```
+https://deine-domain.tld/protected/group-1/example-1.pdf  # für Subscriber
+https://deine-domain.tld/protected/group-2/example-2.pdf  # für Contributor
+```
+
+## Grundlegende Konfiguration
+
+### 1. Erlaubte Dateitypen
 
 Konfiguriere die erlaubten MIME-Types:
 
