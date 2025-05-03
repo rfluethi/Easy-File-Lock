@@ -66,13 +66,13 @@ if (file_exists(LOG_FILE) && filesize(LOG_FILE) > LOG_MAX_SIZE) {
 // Debug: Aktuelle Rollen loggen
 $current = wp_get_current_user();
 if (DEBUG_MODE) {
-    error_log('Aktuelle Rollen: ' . print_r($current->roles, true));
+    file_put_contents(LOG_FILE, 'Aktuelle Rollen: ' . print_r($current->roles, true) . PHP_EOL, FILE_APPEND);
 }
 
 // only logged-in users
 if (!is_user_logged_in()) {
     if (DEBUG_MODE) {
-        error_log('Benutzer nicht eingeloggt');
+        file_put_contents(LOG_FILE, 'Benutzer nicht eingeloggt' . PHP_EOL, FILE_APPEND);
     }
     auth_redirect();
     exit;
@@ -88,7 +88,7 @@ if ($rel === '' || substr($rel, -1) === '/') {
 // Dateiname validieren
 if (!preg_match('/^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/', $rel)) {
     if (DEBUG_MODE) {
-        error_log("Ungültiger Dateiname: $rel");
+        file_put_contents(LOG_FILE, "Ungültiger Dateiname: $rel" . PHP_EOL, FILE_APPEND);
     }
     status_header(400);
     exit('Invalid filename');
@@ -99,7 +99,7 @@ $roles = $current->roles;
 $allowed = false;
 foreach ($roles as $role) {
     if (DEBUG_MODE) {
-        error_log("Prüfe Rolle: $role");
+        file_put_contents(LOG_FILE, "Prüfe Rolle: $role" . PHP_EOL, FILE_APPEND);
     }
     if ($role === 'administrator') {
         $allowed = true;
@@ -114,8 +114,8 @@ foreach ($roles as $role) {
 }
 if (!$allowed) {
     if (DEBUG_MODE) {
-        error_log("Zugriff verweigert für: $rel");
-        error_log("Benutzer-Rollen: " . implode(', ', $roles));
+        file_put_contents(LOG_FILE, "Zugriff verweigert für: $rel" . PHP_EOL, FILE_APPEND);
+        file_put_contents(LOG_FILE, "Benutzer-Rollen: " . implode(', ', $roles) . PHP_EOL, FILE_APPEND);
     }
     status_header(403);
     exit('Forbidden');
@@ -129,8 +129,8 @@ if (
     strncmp($abs, SECURE_FILE_PATH, strlen(SECURE_FILE_PATH)) !== 0
 ) {
     if (DEBUG_MODE) {
-        error_log("Datei nicht gefunden: $rel");
-        error_log("Absoluter Pfad: $abs");
+        file_put_contents(LOG_FILE, "Datei nicht gefunden: $rel" . PHP_EOL, FILE_APPEND);
+        file_put_contents(LOG_FILE, "Absoluter Pfad: $abs" . PHP_EOL, FILE_APPEND);
     }
     status_header(404);
     exit('not found');
@@ -140,14 +140,14 @@ if (
 $size = filesize($abs);
 if ($size === false) {
     if (DEBUG_MODE) {
-        error_log("Fehler beim Lesen der Dateigröße: $rel");
+        file_put_contents(LOG_FILE, "Fehler beim Lesen der Dateigröße: $rel" . PHP_EOL, FILE_APPEND);
     }
     status_header(500);
     exit('Internal server error');
 }
 if ($size > MAX_FILE_SIZE) {
     if (DEBUG_MODE) {
-        error_log("Datei zu groß: $rel ($size Bytes)");
+        file_put_contents(LOG_FILE, "Datei zu groß: $rel ($size Bytes)" . PHP_EOL, FILE_APPEND);
     }
     status_header(413);
     exit('File too large');
@@ -170,18 +170,18 @@ header("Content-Length: $size");
 
 // Debug-Logging
 if (DEBUG_MODE) {
-    error_log(sprintf(
-        "Datei-Transfer: %s (%s, %d Bytes)",
+    file_put_contents(LOG_FILE, sprintf(
+        "Datei-Transfer: %s (%s, %d Bytes)" . PHP_EOL,
         $rel,
         $mime,
         $size
-    ));
+    ), FILE_APPEND);
 }
 
 // send file (chunked for large payloads)
 if ($size > MAX_DIRECT_DOWNLOAD_SIZE) {
     if (DEBUG_MODE) {
-        error_log("Starte Chunked Download");
+        file_put_contents(LOG_FILE, "Starte Chunked Download" . PHP_EOL, FILE_APPEND);
     }
     @set_time_limit(0);
     while (ob_get_level())
@@ -189,7 +189,7 @@ if ($size > MAX_DIRECT_DOWNLOAD_SIZE) {
     $fp = fopen($abs, 'rb');
     if ($fp === false) {
         if (DEBUG_MODE) {
-            error_log("Fehler beim Öffnen der Datei: $rel");
+            file_put_contents(LOG_FILE, "Fehler beim Öffnen der Datei: $rel" . PHP_EOL, FILE_APPEND);
         }
         status_header(500);
         exit('Internal server error');
@@ -200,7 +200,7 @@ if ($size > MAX_DIRECT_DOWNLOAD_SIZE) {
         $data = fread($fp, CHUNK_SIZE);
         if ($data === false) {
             if (DEBUG_MODE) {
-                error_log("Fehler beim Lesen der Datei: $rel");
+                file_put_contents(LOG_FILE, "Fehler beim Lesen der Datei: $rel" . PHP_EOL, FILE_APPEND);
             }
             fclose($fp);
             status_header(500);
@@ -211,20 +211,20 @@ if ($size > MAX_DIRECT_DOWNLOAD_SIZE) {
         $chunks++;
         $total += strlen($data);
         if (DEBUG_MODE && $chunks % 10 === 0) {
-            error_log(sprintf(
-                "Chunk %d: %d Bytes übertragen",
+            file_put_contents(LOG_FILE, sprintf(
+                "Chunk %d: %d Bytes übertragen" . PHP_EOL,
                 $chunks,
                 $total
-            ));
+            ), FILE_APPEND);
         }
     }
     fclose($fp);
     if (DEBUG_MODE) {
-        error_log(sprintf(
-            "Download abgeschlossen: %d Chunks, %d Bytes",
+        file_put_contents(LOG_FILE, sprintf(
+            "Download abgeschlossen: %d Chunks, %d Bytes" . PHP_EOL,
             $chunks,
             $total
-        ));
+        ), FILE_APPEND);
     }
     exit;
 }
@@ -233,7 +233,7 @@ if ($size > MAX_DIRECT_DOWNLOAD_SIZE) {
 $result = readfile($abs);
 if ($result === false) {
     if (DEBUG_MODE) {
-        error_log("Fehler beim Lesen der Datei: $rel");
+        file_put_contents(LOG_FILE, "Fehler beim Lesen der Datei: $rel" . PHP_EOL, FILE_APPEND);
     }
     status_header(500);
     exit('Internal server error');
