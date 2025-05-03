@@ -4,8 +4,8 @@
 
 ### 1.1 Standard-Konfiguration
 ```php
-// Wenn WordPress in einem Unterverzeichnis des WebRoots liegt (z.B. /main/)
-define('WP_CORE_PATH', dirname(__DIR__, 2) . '/main/wp-load.php');
+// Wenn WordPress in einem Unterverzeichnis des WebRoots liegt (z.B. /wordpress/)
+define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wordpress/wp-load.php');
 
 // Wenn WordPress direkt im WebRoot liegt
 define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');
@@ -16,7 +16,7 @@ define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');
 - Bei WordPress in einem Unterverzeichnis:
   - Start: `/path/to/secure-files/config/`
   - Nach `dirname(__DIR__, 2)`: `/path/to/`
-  - Final: `/path/to/main/wp-load.php`
+  - Final: `/path/to/wordpress/wp-load.php`
 
 **Hinweis:**  
 - Der Pfad muss zum tatsächlichen Standort von WordPress passen

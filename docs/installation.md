@@ -61,10 +61,10 @@
    // In secure-files/config/secure-config.php
    
    // Wenn WordPress direkt im WebRoot liegt
-   define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');
+   define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/wp-load.php');
    
    // Wenn WordPress in einem Unterverzeichnis liegt
-   define('WP_CORE_PATH', dirname(__DIR__, 2) . '/main/wp-load.php');
+   define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/wordpress/wp-load.php');
    ```
 
 5. **Debug-Modus (optional)**
@@ -208,8 +208,8 @@ Nach der Installation könnte Ihre Verzeichnisstruktur so aussehen (Beispiel mit
 1. Öffne die Datei `secure-files/config/secure-config.php`
 2. Passe die Konfiguration an:
    ```php
-   // WordPress-Pfad (wenn WordPress in /public_html/main/ liegt)
-   define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/main/wp-load.php');
+   // WordPress-Pfad (wenn WordPress in /public_html/wordpress/ liegt)
+   define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/wordpress/wp-load.php');
 
    // Logging-Konfiguration
    define('LOG_DIR', dirname(__DIR__) . '/logs');
@@ -222,8 +222,8 @@ Nach der Installation könnte Ihre Verzeichnisstruktur so aussehen (Beispiel mit
    ];
 
    // Download-Einstellungen
-   define('MAX_DIRECT_DOWNLOAD_SIZE', 524288);  // 512 KB
-   define('CHUNK_SIZE', 1048576);              // 1 MB
+   define('MAX_DIRECT_DOWNLOAD_SIZE', 1048576);  // 1 MB
+   define('CHUNK_SIZE', 4194304);               // 4 MB
    ```
 
 3. Öffne die WordPress-Konfigurationsdatei `wp-config.php` und füge folgende Zeile hinzu:
@@ -240,9 +240,9 @@ Nach der Installation könnte Ihre Verzeichnisstruktur so aussehen (Beispiel mit
 - Das Log-Verzeichnis muss beschreibbar sein
 
 **Hinweis:**  
-- Wenn WordPress in einem Unterverzeichnis liegt (z.B. `/public_html/main/`), verwende:
+- Wenn WordPress in einem Unterverzeichnis liegt (z.B. `/public_html/wordpress/`), verwende:
   ```php
-  define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/main/wp-load.php');
+  define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/wordpress/wp-load.php');
   ```
 - Wenn WordPress direkt in `public_html` liegt, verwende:
   ```php

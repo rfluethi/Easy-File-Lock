@@ -49,11 +49,11 @@ secure-files/                  # Außerhalb des WebRoots (nicht erreichbar)
 
 ### 2.1 WordPress-Pfad
 ```php
-// Standard-Konfiguration (WordPress direkt im WebRoot)
-define('WP_CORE_PATH', dirname(__DIR__, 2) . '/wp-load.php');
+// Wenn WordPress in /public_html/wordpress/ liegt
+define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/wordpress/wp-load.php');
 
-// Alternative (WordPress in Unterverzeichnis)
-define('WP_CORE_PATH', dirname(__DIR__, 2) . '/main/wp-load.php');
+// Wenn WordPress direkt in public_html liegt
+define('WP_CORE_PATH', dirname(__DIR__, 2) . '/public_html/wp-load.php');
 ```
 
 ### 2.2 Rollenzuordnung
