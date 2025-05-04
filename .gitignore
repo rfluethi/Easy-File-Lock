@@ -9,9 +9,8 @@ Thumbs.db
 *.sublime-workspace
 
 # Logs
-*.log
-error_log
-access_log
+secure-files/logs/*.log
+!secure-files/logs/access.log
 
 # Environment files
 .env
