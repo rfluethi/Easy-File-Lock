@@ -21,4 +21,3 @@
 - Role-based access control
 - File access protection
 - Logging functionality
-- Multilingual support (German)
