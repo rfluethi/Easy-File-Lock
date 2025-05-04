@@ -3,22 +3,22 @@
 ## [1.0.1] - 2024-05-04
 
 ### Added
-- Englische Übersetzung hinzugefügt
-- Automatische Versionsaktualisierung im README.md
+- Added English translation
+- Added automatic version update in README.md
 
 ### Changed
-- Verbesserte Dokumentationsstruktur für bessere Lesbarkeit
-- Kleinere Code-Verbesserungen
+- Improved documentation structure for better readability
+- Minor code improvements
 
 ### Fixed
-- Keine Fehlerbehebungen in dieser Version
+- No bug fixes in this version
 
 ## [1.0.0] - 2024-05-03
 
 ### Added
-- Initiale Version
-- WordPress-Integration
-- Rollenbasierte Zugriffskontrolle
-- Datei-Zugriffsschutz
-- Protokollierung
-- Mehrsprachige Unterstützung (Deutsch)
+- Initial version
+- WordPress integration
+- Role-based access control
+- File access protection
+- Logging functionality
+- Multilingual support (German)
