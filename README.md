@@ -1,70 +1,50 @@
 # Easy File Lock
 
-Deliver protected files based on WordPress user groups.
-
-This project provides a lightweight PHP-based solution to restrict access to files in WordPress based on user groups — without relying on bloated plugins. A `.htaccess` rule redirects requests to a central access check script, which evaluates permissions and delivers files from a protected directory if access is granted. Configuration is handled via a single PHP file. The system is deliberately simple and can be flexibly adapted to a variety of server environments. Developed collaboratively during a workshop, it is designed for easy understanding, practical use, and further extension.
+Ein sicheres System zur Zugriffskontrolle von Dateien auf WordPress-Websites.
 
 ## Features
 
-- Stores files outside the WebRoot
-- Role-based access control
-- Efficient streaming of large files
-- Protection against unauthorized access
+- Nahtlose Integration mit WordPress-Benutzerverwaltung
+- Rollenbasierte Zugriffskontrolle für geschützte Dateien
+- Einfache Konfiguration über WordPress-Administrationsbereich
+- Automatische Protokollierung aller Zugriffe
+- Unterstützung für verschiedene Dateitypen
+- Mehrsprachige Benutzeroberfläche (Deutsch/Englisch)
 
 ## Installation
 
-### Quick Start
-
-1. Download the latest release files:
+1. Laden Sie die neueste Version herunter:
    - [protected.zip](https://github.com/rfluethi/Easy-File-Lock/releases/latest/download/protected.zip)
    - [secure-files.zip](https://github.com/rfluethi/Easy-File-Lock/releases/latest/download/secure-files.zip)
 
-2. Extract the files:
-   - Copy `protected/` into `public_html/` so it resides inside the WebRoot.
-   - Place `secure-files/` outside `public_html/` to keep it outside the WebRoot.
+2. Entpacken Sie `protected.zip` in das Root-Verzeichnis Ihrer WordPress-Installation
+3. Entpacken Sie `secure-files.zip` in das Root-Verzeichnis Ihrer WordPress-Installation
+4. Konfigurieren Sie die Berechtigungen wie in der [Dokumentation](docs/configuration.md) beschrieben
 
-3. Configure WordPress:
-   ```php
-   define('SECURE_FILE_PATH', dirname(dirname(ABSPATH)) . '/secure-files');
-   ```
+## Dokumentation
 
-### Detailed Instructions
+- [Technische Dokumentation](docs/technical.md)
+- [Konfigurationsanleitung](docs/configuration.md)
+- [Installationsanleitung](docs/installation.md)
 
-See the [Installation Guide](docs/installation.md) for full setup details.
+## Versionen
 
-## Documentation
-
-- [Technical Documentation](docs/technical.md) – In-depth technical information
-- [Configuration](docs/configuration.md) – Configuration options
-- [Troubleshooting](docs/troubleshooting.md) – Solutions to common problems
-- [Security](docs/security.md) – Security notes and best practices
-- [Changelog](docs/changelog.md) – Version history
-
-## Releases
-
-### Current Version
-- Version: [v1.0.0](https://github.com/rfluethi/Easy-File-Lock/releases/latest)
-- Downloads:
-  - [protected.zip](https://github.com/rfluethi/Easy-File-Lock/releases/latest/download/protected.zip)
-  - [secure-files.zip](https://github.com/rfluethi/Easy-File-Lock/releases/latest/download/secure-files.zip)
+### Current Version: v1.0.1
+- Added English translation
+- Minor code improvements
+- Improved documentation structure for better readability
 
 ### Older Versions
-Find all releases in the [Release Overview](https://github.com/rfluethi/Easy-File-Lock/releases).
+- [v1.0.0](https://github.com/rfluethi/Easy-File-Lock/releases/tag/v1.0.0) - Initial release
 
-## Known Issues
+## Bekannte Probleme
 
-- Large files (>100MB) may cause timeouts on some hosting providers
-- Some hosting environments do not support access outside the WebRoot
-- Certain PHP configurations may limit the maximum file size
+- Keine bekannten Probleme in der aktuellen Version
 
-## Contributing
+## Mitwirken
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push the branch (`git push origin feature/AmazingFeature`)
-5. Create a pull request
+Beiträge sind willkommen! Bitte lesen Sie unsere [Beitragsrichtlinien](CONTRIBUTING.md) für Details.
 
-## License
+## Lizenz
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe die [LICENSE](LICENSE) Datei für Details.
