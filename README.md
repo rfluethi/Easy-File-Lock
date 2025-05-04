@@ -1,6 +1,8 @@
 # Easy File Lock
 
-A system for managing and delivering protected files in WordPress.
+Deliver protected files based on WordPress user groups.
+
+This project provides a lightweight PHP-based solution to restrict access to files in WordPress based on user groups — without relying on bloated plugins. A `.htaccess` rule redirects requests to a central access check script, which evaluates permissions and delivers files from a protected directory if access is granted. Configuration is handled via a single PHP file. The system is deliberately simple and can be flexibly adapted to a variety of server environments. Developed collaboratively during a workshop, it is designed for easy understanding, practical use, and further extension.
 
 ## Features
 
