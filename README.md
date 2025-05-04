@@ -37,10 +37,6 @@ A secure system for file access control on WordPress websites.
 ### Older Versions
 - [v1.0.0](https://github.com/rfluethi/Easy-File-Lock/releases/tag/v1.0.0) - Initial release
 
-## Known Issues
-
-- No known issues in the current version
-
 ## Contributing
 
 1. Fork the repository
