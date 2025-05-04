@@ -540,3 +540,301 @@ The system implements several security measures:
    - Logs all access attempts
    - Stores errors and warnings
    - Enables tracking of security incidents
+
+### Server Configuration
+
+The system can be configured to run on different web servers. Below are the specific configurations for each supported server:
+
+#### Apache Configuration
+
+1. **Basic Setup**
+   ```apache
+   <Directory /path/to/secure-files>
+       Options -Indexes
+       AllowOverride All
+       Require all denied
+   </Directory>
+   ```
+
+2. **.htaccess Configuration**
+   ```apache
+   RewriteEngine On
+   RewriteBase /protected/
+   
+   # Prevent direct access to check-access.php
+   RewriteRule ^check-access\.php$ - [F,L]
+   
+   # Handle directory requests
+   RewriteRule ^(.+/)$ /protected/check-access.php?file=$1index.html [QSA,L]
+   
+   # Handle file requests
+   RewriteRule ^(.+)$ /protected/check-access.php?file=$1 [QSA,L]
+   
+   # Security headers
+   Header set X-Content-Type-Options "nosniff"
+   Header set X-Frame-Options "DENY"
+   Header set X-XSS-Protection "1; mode=block"
+   ```
+
+#### Nginx Configuration
+
+1. **Server Block Configuration**
+   ```nginx
+   location /protected/ {
+       # Prevent direct access to check-access.php
+       location = /protected/check-access.php {
+           deny all;
+       }
+       
+       # Handle all requests through check-access.php
+       try_files $uri @protected;
+   }
+   
+   location @protected {
+       include fastcgi_params;
+       fastcgi_param SCRIPT_FILENAME $document_root/protected/check-access.php;
+       fastcgi_param QUERY_STRING file=$uri;
+       fastcgi_pass unix:/var/run/php-fpm.sock;
+   }
+   ```
+
+2. **Security Headers**
+   ```nginx
+   add_header X-Content-Type-Options "nosniff" always;
+   add_header X-Frame-Options "DENY" always;
+   add_header X-XSS-Protection "1; mode=block" always;
+   add_header Content-Security-Policy "default-src 'self'" always;
+   ```
+
+#### LiteSpeed Configuration
+
+1. **.htaccess Configuration**
+   ```apache
+   RewriteEngine On
+   RewriteBase /protected/
+   
+   # Prevent direct access to check-access.php
+   RewriteRule ^check-access\.php$ - [F,L]
+   
+   # Handle directory requests
+   RewriteRule ^(.+/)$ /protected/check-access.php?file=$1index.html [QSA,L]
+   
+   # Handle file requests
+   RewriteRule ^(.+)$ /protected/check-access.php?file=$1 [QSA,L]
+   ```
+
+2. **LiteSpeed Specific Settings**
+   ```apache
+   # Enable LiteSpeed cache
+   <IfModule LiteSpeed>
+       CacheLookup on
+       RewriteEngine On
+       RewriteRule .* - [E=Cache-Control:no-cache]
+   </IfModule>
+   ```
+
+### Server-Specific Considerations
+
+1. **Apache**
+   - Requires mod_rewrite enabled
+   - Requires mod_headers enabled
+   - Recommended for shared hosting environments
+   - Easy configuration through .htaccess
+
+2. **Nginx**
+   - Better performance for static file serving
+   - Requires PHP-FPM configuration
+   - More complex initial setup
+   - Better suited for high-traffic environments
+
+3. **LiteSpeed**
+   - Compatible with Apache configurations
+   - Built-in caching capabilities
+   - Good performance for dynamic content
+   - Suitable for both shared and dedicated hosting
+
+### Performance Optimization
+
+1. **Apache**
+   ```apache
+   # Enable Keep-Alive
+   KeepAlive On
+   KeepAliveTimeout 5
+   
+   # Enable compression
+   <IfModule mod_deflate.c>
+       AddOutputFilterByType DEFLATE text/html text/plain text/xml
+   </IfModule>
+   ```
+
+2. **Nginx**
+   ```nginx
+   # Enable gzip compression
+   gzip on;
+   gzip_types text/plain text/css application/json application/javascript;
+   
+   # Configure buffer sizes
+   client_max_body_size 10M;
+   client_body_buffer_size 128k;
+   ```
+
+3. **LiteSpeed**
+   ```apache
+   <IfModule LiteSpeed>
+       # Enable LiteSpeed cache
+       CacheLookup on
+       
+       # Configure cache settings
+       RewriteRule .* - [E=Cache-Control:no-cache]
+       RewriteRule .* - [E=Cache-Control:private]
+   </IfModule>
+   ```
+
+### Security Considerations
+
+1. **Common Security Measures**
+   - Disable directory listing
+   - Prevent direct access to PHP files
+   - Implement proper file permissions
+   - Use secure headers
+
+2. **Server-Specific Security**
+   - Apache: Use mod_security for additional protection
+   - Nginx: Implement rate limiting and request filtering
+   - LiteSpeed: Utilize built-in security features
+
+3. **SSL/TLS Configuration**
+   ```apache
+   # Apache
+   SSLEngine on
+   SSLCertificateFile /path/to/certificate.crt
+   SSLCertificateKeyFile /path/to/private.key
+   ```
+
+   ```nginx
+   # Nginx
+   ssl_certificate /path/to/certificate.crt;
+   ssl_certificate_key /path/to/private.key;
+   ssl_protocols TLSv1.2 TLSv1.3;
+   ```
+
+### Troubleshooting
+
+1. **Common Issues**
+   - 500 Internal Server Error
+     - Check PHP error logs
+     - Verify file permissions
+     - Check server configuration
+
+   - 403 Forbidden
+     - Verify .htaccess configuration
+     - Check user permissions
+     - Validate rewrite rules
+
+   - 404 Not Found
+     - Check file paths
+     - Verify rewrite rules
+     - Check file existence
+
+2. **Server-Specific Debugging**
+   - Apache: Check error_log
+   - Nginx: Check error.log
+   - LiteSpeed: Check error.log and stderr.log
+
+3. **Performance Issues**
+   - Check server load
+   - Monitor memory usage
+   - Review PHP-FPM settings (if applicable)
+   - Optimize server configuration
+
+### Primary Server Support
+
+The system is primarily optimized for Apache web server, with support for Nginx and LiteSpeed as alternative options. This optimization is reflected in several aspects:
+
+1. **Default Configuration**
+   - Apache `.htaccess` configuration is the primary setup
+   - Apache-specific modules (`mod_rewrite`, `mod_headers`) are required
+   - Directory structure and permissions follow Apache conventions
+   - Security headers and cache control are Apache-optimized
+
+2. **Apache-Specific Features**
+   ```apache
+   # Primary Apache configuration
+   RewriteEngine On
+   RewriteBase /protected/
+   RewriteRule ^check-access\.php$ - [F,L]
+   ```
+   - Direct support for Apache's rewrite rules
+   - Native integration with Apache's security features
+   - Optimized performance for Apache's file handling
+   - Built-in support for Apache's caching mechanisms
+
+3. **System Requirements**
+   - Apache 2.4 or later
+   - `mod_rewrite` module enabled
+   - `mod_headers` module enabled
+   - Apache-compatible PHP configuration
+
+4. **Alternative Server Support**
+   While the system can run on Nginx and LiteSpeed, these require additional configuration:
+   - Nginx: Requires custom server block configuration
+   - LiteSpeed: Compatible with Apache configurations but may need adjustments
+   - Both alternatives may require additional setup for optimal performance
+
+5. **Performance Considerations**
+   - Apache: Native optimization and best performance
+   - Nginx: Requires PHP-FPM configuration
+   - LiteSpeed: Compatible but may need specific optimizations
+
+### Server Compatibility Matrix
+
+| Feature                    | Apache | Nginx | LiteSpeed |
+|---------------------------|--------|--------|-----------|
+| Native Configuration      | Yes    | No     | Partial   |
+| Direct .htaccess Support  | Yes    | No     | Yes       |
+| Built-in Security Headers | Yes    | No     | Yes       |
+| Default Performance       | Best   | Good   | Good      |
+| Setup Complexity          | Low    | High   | Medium    |
+| Maintenance Effort        | Low    | High   | Medium    |
+
+### Recommended Server Setup
+
+1. **Primary Recommendation: Apache**
+   - Best performance out of the box
+   - Native support for all features
+   - Simplest configuration and maintenance
+   - Direct compatibility with WordPress
+
+2. **Alternative: Nginx**
+   - Requires additional configuration
+   - Needs PHP-FPM setup
+   - Custom server block configuration needed
+   - Higher initial setup effort
+
+3. **Alternative: LiteSpeed**
+   - Compatible with Apache configurations
+   - May need specific optimizations
+   - Built-in caching capabilities
+   - Medium setup complexity
+
+### Migration Considerations
+
+When migrating between servers, consider:
+
+1. **Apache to Nginx**
+   - Convert `.htaccess` rules to server blocks
+   - Configure PHP-FPM
+   - Adjust security headers
+   - Test all file access patterns
+
+2. **Apache to LiteSpeed**
+   - Most configurations will work directly
+   - Optimize caching settings
+   - Verify security headers
+   - Test performance
+
+3. **Nginx/LiteSpeed to Apache**
+   - Convert server-specific configurations
+   - Implement `.htaccess` rules
+   - Verify security settings
+   - Test all access patterns
