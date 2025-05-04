@@ -28,10 +28,14 @@ secure-files/                  # Outside WebRoot (not publicly accessible)
 * `secure-files/logs/access.log`: 644 (-rw-r--r--)
 * `secure-files/group-*/*`: 644 (-rw-r--r--)
 
-### Example URLs
+### Access Control
 
-* Access for Subscriber: `/protected/group-1/example-1.pdf`
-* Access for Contributor: `/protected/group-2/example-2.pdf`
+* **Administrators**: Have full access to all protected files in all directories
+* **Role-based Access**: Other users can only access files in their assigned group directories
+* **Example URLs**:
+  - Access for Subscriber: `/protected/group-1/example-1.pdf`
+  - Access for Contributor: `/protected/group-2/example-2.pdf`
+  - Administrators can access both URLs
 
 ## Performance
 

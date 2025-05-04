@@ -12,6 +12,19 @@ The load order of components is critical:
 2. Constants such as `MIN_MEMORY_LIMIT` must only be used after this file is included.
 3. WordPress should then be loaded via `wp-load.php`.
 
+### Access Control
+
+The system implements a hierarchical access control:
+
+1. **Administrator Access**
+   - Users with the 'administrator' role have full access to all protected files
+   - This is a built-in feature that cannot be disabled
+   - Administrators can access files in all group directories
+
+2. **Role-Based Access**
+   - Other users can only access files in their assigned group directories
+   - Access is controlled by the `$role_folders` configuration
+
 ### Error Handling
 
 If `secure-config.php` is missing or cannot be loaded, the script must terminate with an appropriate error message. The same applies if the WordPress path (`WP_CORE_PATH`) is not correctly set or if `wp-load.php` cannot be found.
