@@ -1,33 +1,33 @@
 # Easy File Lock
 
-Ein sicheres System zur Zugriffskontrolle von Dateien auf WordPress-Websites.
+A secure system for file access control on WordPress websites.
 
 ## Features
 
-- Nahtlose Integration mit WordPress-Benutzerverwaltung
-- Rollenbasierte Zugriffskontrolle für geschützte Dateien
-- Einfache Konfiguration über WordPress-Administrationsbereich
-- Automatische Protokollierung aller Zugriffe
-- Unterstützung für verschiedene Dateitypen
-- Mehrsprachige Benutzeroberfläche (Deutsch/Englisch)
+- Seamless integration with WordPress user management
+- Role-based access control for protected files
+- Easy configuration through WordPress admin panel
+- Automatic logging of all access attempts
+- Support for various file types
+- Multilingual interface (German/English)
 
 ## Installation
 
-1. Laden Sie die neueste Version herunter:
+1. Download the latest version:
    - [protected.zip](https://github.com/rfluethi/Easy-File-Lock/releases/latest/download/protected.zip)
    - [secure-files.zip](https://github.com/rfluethi/Easy-File-Lock/releases/latest/download/secure-files.zip)
 
-2. Entpacken Sie `protected.zip` in das Root-Verzeichnis Ihrer WordPress-Installation
-3. Entpacken Sie `secure-files.zip` in das Root-Verzeichnis Ihrer WordPress-Installation
-4. Konfigurieren Sie die Berechtigungen wie in der [Dokumentation](docs/configuration.md) beschrieben
+2. Extract `protected.zip` to your WordPress installation root directory
+3. Extract `secure-files.zip` to your WordPress installation root directory
+4. Configure permissions as described in the [documentation](docs/configuration.md)
 
-## Dokumentation
+## Documentation
 
-- [Technische Dokumentation](docs/technical.md)
-- [Konfigurationsanleitung](docs/configuration.md)
-- [Installationsanleitung](docs/installation.md)
+- [Technical Documentation](docs/technical.md)
+- [Configuration Guide](docs/configuration.md)
+- [Installation Guide](docs/installation.md)
 
-## Versionen
+## Versions
 
 ### Current Version: v1.0.1
 - Added English translation
@@ -37,14 +37,14 @@ Ein sicheres System zur Zugriffskontrolle von Dateien auf WordPress-Websites.
 ### Older Versions
 - [v1.0.0](https://github.com/rfluethi/Easy-File-Lock/releases/tag/v1.0.0) - Initial release
 
-## Bekannte Probleme
+## Known Issues
 
-- Keine bekannten Probleme in der aktuellen Version
+- No known issues in the current version
 
-## Mitwirken
+## Contributing
 
-Beiträge sind willkommen! Bitte lesen Sie unsere [Beitragsrichtlinien](CONTRIBUTING.md) für Details.
+Contributions are welcome! Please read our [contributing guidelines](CONTRIBUTING.md) for details.
 
-## Lizenz
+## License
 
-Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe die [LICENSE](LICENSE) Datei für Details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
