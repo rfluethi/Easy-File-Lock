@@ -1,4 +1,4 @@
-# Website Access Control Basic
+# Easy File Lock
 
 A system for managing and delivering protected files in WordPress.
 
@@ -14,8 +14,8 @@ A system for managing and delivering protected files in WordPress.
 ### Quick Start
 
 1. Download the latest release files:
-   - [protected.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/protected.zip)
-   - [secure-files.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/secure-files.zip)
+   - [protected.zip](https://github.com/rfluethi/Easy-File-Lock/releases/latest/download/protected.zip)
+   - [secure-files.zip](https://github.com/rfluethi/Easy-File-Lock/releases/latest/download/secure-files.zip)
 
 2. Extract the files:
    - Copy `protected/` into `public_html/` so it resides inside the WebRoot.
@@ -41,13 +41,13 @@ See the [Installation Guide](docs/installation.md) for full setup details.
 ## Releases
 
 ### Current Version
-- Version: [v1.0.0](https://github.com/your-username/Website-Access-Control-Basic/releases/latest)
+- Version: [v1.0.0](https://github.com/rfluethi/Easy-File-Lock/releases/latest)
 - Downloads:
-  - [protected.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/protected.zip)
-  - [secure-files.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/secure-files.zip)
+  - [protected.zip](https://github.com/rfluethi/Easy-File-Lock/releases/latest/download/protected.zip)
+  - [secure-files.zip](https://github.com/rfluethi/Easy-File-Lock/releases/latest/download/secure-files.zip)
 
 ### Older Versions
-Find all releases in the [Release Overview](https://github.com/your-username/Website-Access-Control-Basic/releases).
+Find all releases in the [Release Overview](https://github.com/rfluethi/Easy-File-Lock/releases).
 
 ## Known Issues
 
