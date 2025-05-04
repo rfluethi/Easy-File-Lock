@@ -26,6 +26,8 @@ A secure system for file access control on WordPress websites.
 - [Technical Documentation](docs/technical.md)
 - [Configuration Guide](docs/configuration.md)
 - [Installation Guide](docs/installation.md)
+- [Changelog](docs/changelog.md)
+- [Troubleshooting](docs/troubleshooting.md)
 
 ## Versions
 
