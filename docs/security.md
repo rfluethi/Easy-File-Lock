@@ -1,240 +1,240 @@
-# Sicherheitsrichtlinien
+# Security Policies
 
-Dieses Dokument beschreibt die Sicherheitsmaßnahmen und Best Practices für den Dateischutz.
+This document outlines the security measures and best practices for protecting files.
 
-## Ziele der Sicherheitsmaßnahmen
+## Objectives of Security Measures
 
-Die folgenden Maßnahmen dienen dem Schutz vor:
+The following measures aim to prevent:
 
-* Unbefugtem Zugriff auf geschützte Dateien
-* Umgehung von Benutzerrollen und Zugriffsbeschränkungen
-* Directory-Traversal-Angriffen und direktem Dateizugriff
-* Missbrauch durch automatisierte Tools oder Massenzugriffe (DoS)
-* Schwachstellen in der Anwendungsschicht (z. B. XSS, CSRF)
-* Verstößen gegen Datenschutzrichtlinien (DSGVO)
+* Unauthorized access to protected files
+* Bypassing user roles and access restrictions
+* Directory traversal attacks and direct file access
+* Abuse by automated tools or mass access (DoS)
+* Application-layer vulnerabilities (e.g., XSS, CSRF)
+* Violations of data protection regulations (e.g., GDPR)
 
-## Sicherheitsarchitektur
+## Security Architecture
 
-### Mehrschichtige Sicherheit
+### Layered Security
 
-1. **Dateisystem-Ebene**
+1. **File System Level**
 
-   * Dateien außerhalb des Web-Roots
-   * Strikte Berechtigungen
-   * Keine direkte URL-Zugänglichkeit
+   * Files stored outside the WebRoot
+   * Strict permissions
+   * No direct URL accessibility
 
-2. **Webserver-Ebene**
+2. **Web Server Level**
 
-   * `.htaccess`-Schutz
-   * PHP-Ausführung verhindert
-   * Weiterleitung an `check-access.php`
+   * `.htaccess` protection
+   * PHP execution disabled
+   * Redirects to `check-access.php`
 
-3. **Anwendungs-Ebene**
+3. **Application Level**
 
-   * WordPress-Authentifizierung
-   * Rollenbasierte Zugriffskontrolle
-   * Session-Management
-   * Schutz vor XSS (HTML-Ausgabe escapen)
-   * CSRF-Schutz bei Formularen (z. B. Token-Verwendung)
+   * WordPress authentication
+   * Role-based access control
+   * Session management
+   * XSS protection (escape HTML output)
+   * CSRF protection in forms (e.g., token usage)
 
-4. **Transport-Ebene**
+4. **Transport Layer**
 
-   * HTTPS-Verschlüsselung
-   * Sichere Cookies
-   * Chunked Downloads
+   * HTTPS encryption
+   * Secure cookies
+   * Chunked downloads
 
-## Sicherheitsmaßnahmen
+## Security Measures
 
-### Dateisystem-Sicherheit
+### File System Security
 
-1. **Ordnerstruktur**
+1. **Folder Structure**
 
    ```
-   /secure-files/              # Hauptordner (755)
-   ├── config/                # Konfigurationsordner (755)
-   │   └── secure-config.php  # Konfigurationsdatei (644)
-   └── [role-folders]/        # Rollenordner (755)
+   /secure-files/              # Main directory (755)
+   ├── config/                # Configuration folder (755)
+   │   └── secure-config.php  # Configuration file (644)
+   └── [role-folders]/        # Role-specific folders (755)
    ```
 
-2. **Berechtigungen**
+2. **Permissions**
 
-   * Ordner: 755 (drwxr-xr-x)
-   * Dateien: 644 (-rw-r--r--)
-   * Ausführbare Dateien: 755 (-rwxr-xr-x)
+   * Folders: 755 (drwxr-xr-x)
+   * Files: 644 (-rw-r--r--)
+   * Executable files: 755 (-rwxr-xr-x)
 
-3. **Schutzmaßnahmen**
+3. **Protection Measures**
 
-   * Keine PHP-Ausführung
-   * Keine Verzeichnisauflistung
-   * Keine direkten Downloads
+   * No PHP execution
+   * No directory listing
+   * No direct downloads
 
-### Webserver-Sicherheit
+### Web Server Security
 
-1. **.htaccess-Regeln**
+1. **.htaccess Rules**
 
    ```apache
-   # PHP-Ausführung verhindern
+   # Disable PHP execution
    <FilesMatch "\.php$">
        Order Allow,Deny
        Deny from all
    </FilesMatch>
 
-   # Verzeichnisauflistung verhindern
+   # Disable directory listing
    Options -Indexes
 
-   # Weiterleitung an check-access.php
+   # Redirect to check-access.php
    RewriteEngine On
    RewriteCond %{REQUEST_FILENAME} -f
    RewriteRule ^(.*)$ check-access.php?file=$1 [L,QSA]
    ```
 
-2. **PHP-Konfiguration**
+2. **PHP Configuration**
 
    * `display_errors = Off`
    * `log_errors = On`
    * `error_reporting = E_ALL`
 
-3. **Rate-Limiting und Abuse-Schutz (optional)**
+3. **Rate Limiting and Abuse Protection (optional)**
 
-   * IP-basiertes Request-Limit über Middleware oder Webserver (mod\_evasive, Nginx-Limits)
-   * Zugriffszähler pro IP im Session-Kontext oder Redis
+   * IP-based request limits via middleware or web server (mod_evasive, Nginx limits)
+   * Access counters per IP using session context or Redis
 
-### Anwendungssicherheit
+### Application Security
 
-1. **Authentifizierung**
+1. **Authentication**
 
-   * WordPress-Login erforderlich
-   * Sichere Passwortrichtlinien
-   * Session-Timeout
+   * WordPress login required
+   * Strong password policies
+   * Session timeouts
 
-2. **Zugriffskontrolle**
+2. **Access Control**
 
-   * Rollenbasierte Berechtigungen
-   * Ordnerbasierte Einschränkungen
-   * Keine Überschreitung der Rollengrenzen
+   * Role-based permissions
+   * Folder-based restrictions
+   * No role escalation
 
-3. **Datei-Handling**
+3. **File Handling**
 
-   * MIME-Type-Validierung
-   * Größenbeschränkungen
-   * Chunked Downloads
+   * MIME type validation
+   * File size restrictions
+   * Chunked downloads
 
-### Datenschutz & Logging
+### Data Protection & Logging
 
-* Keine Speicherung von IP-Adressen oder personenbezogenen Daten ohne Rechtsgrundlage
-* Zugriffe auf Log-Dateien nur durch berechtigte Administratoren
-* Löschung alter Logs automatisieren (z. B. nach 30 Tagen)
+* No storage of IP addresses or personal data without legal basis
+* Log file access restricted to authorized administrators
+* Automate deletion of old logs (e.g., after 30 days)
 
 ## Best Practices
 
-### Konfiguration
+### Configuration
 
-1. **Sichere Einstellungen**
+1. **Secure Settings**
 
    ```php
-   define('DEBUG_MODE', false);          // Debug-Modus deaktivieren
+   define('DEBUG_MODE', false);          // Disable debug mode
    define('CHUNK_SIZE', 4194304);        // 4 MB
    define('MAX_DIRECT_DOWNLOAD_SIZE', 1048576); // 1 MB
    ```
 
-2. **MIME-Types**
+2. **MIME Types**
 
-   * Nur erlaubte Typen definieren
-   * Keine ausführbaren Dateien (z. B. .php, .exe)
-   * Dokumentierte und prüfbare Formate
+   * Define only allowed types
+   * Exclude executable files (e.g., .php, .exe)
+   * Use documented and verifiable formats
 
-### Wartung
+### Maintenance
 
-1. **Regelmäßige Überprüfungen**
+1. **Regular Checks**
 
-   * Berechtigungen prüfen
-   * Logs analysieren
-   * Updates einspielen
+   * Review permissions
+   * Analyze logs
+   * Apply updates
 
-2. **Backup-Strategie**
+2. **Backup Strategy**
 
-   * Regelmäßige Backups
-   * Verschlüsselte Speicherung
-   * Getrennte Standorte
+   * Regular backups
+   * Encrypted storage
+   * Separate locations
 
 3. **Monitoring**
 
-   * Zugriffsprotokolle
-   * Fehlerprotokolle
-   * Performance-Metriken
+   * Access logs
+   * Error logs
+   * Performance metrics
 
-## Sicherheits-Checkliste
+## Security Checklist
 
 ### Installation
 
-* [ ] Ordner außerhalb des Web-Roots
-* [ ] Korrekte Berechtigungen für Dateien und Verzeichnisse
-* [ ] Keine ausführbaren Dateien im Download-Verzeichnis
-* [ ] HTTPS vollständig eingerichtet
-* [ ] Debug-Modus deaktiviert
-* [ ] Zugriff nur über `check-access.php` möglich
+* [ ] Folders located outside the WebRoot
+* [ ] Correct permissions for files and directories
+* [ ] No executable files in the download directory
+* [ ] HTTPS fully configured
+* [ ] Debug mode disabled
+* [ ] Access only via `check-access.php`
 
-### Konfiguration
+### Configuration
 
-* [ ] Benutzerrollen korrekt zugewiesen
-* [ ] Zugriffsstruktur für Rollen definiert
-* [ ] MIME-Types eingeschränkt auf sichere Formate
-* [ ] Chunk-Größe sinnvoll konfiguriert
-* [ ] Download-Limits gesetzt (Größe und Anzahl)
-* [ ] Sicherheits-Header aktiv
-* [ ] PHP-Fehlerausgabe deaktiviert
+* [ ] User roles correctly assigned
+* [ ] Defined access structure per role
+* [ ] MIME types restricted to safe formats
+* [ ] Appropriate chunk size configured
+* [ ] Download limits set (size and number)
+* [ ] Security headers active
+* [ ] PHP error output disabled
 
-### Wartung
+### Maintenance
 
-* [ ] Regelmäßige Updates von WordPress, PHP und Plugins
-* [ ] Analyse und Rotation der Log-Dateien
-* [ ] Berechtigungen regelmäßig überprüft
-* [ ] Backup-Plan getestet und dokumentiert
-* [ ] Monitoring aktiv (Fehler, Zugriffe, Performance)
-* [ ] Alte Log-Dateien datenschutzkonform gelöscht
+* [ ] Regular updates of WordPress, PHP, and plugins
+* [ ] Log file analysis and rotation
+* [ ] Regular permission reviews
+* [ ] Backup plan tested and documented
+* [ ] Monitoring enabled (errors, access, performance)
+* [ ] Old logs deleted in compliance with data protection laws
 
 ## Incident Response
 
-### Bei Sicherheitsvorfällen
+### In Case of Security Incidents
 
-1. **Sofortmaßnahmen**
+1. **Immediate Actions**
 
-   * System isolieren
-   * Logs sichern
-   * Zugänge sperren
+   * Isolate the system
+   * Secure the logs
+   * Revoke access credentials
 
-2. **Analyse**
+2. **Analysis**
 
-   * Ursache identifizieren
-   * Ausmaß bestimmen
-   * Dokumentation erstellen
+   * Identify root cause
+   * Assess impact
+   * Document the incident
 
-3. **Wiederherstellung**
+3. **Recovery**
 
-   * System bereinigen
-   * Updates einspielen
-   * Zugänge neu konfigurieren
+   * Clean the system
+   * Apply updates and fixes
+   * Reconfigure access
 
-### Kontakt
+### Contact
 
-Bei Sicherheitsvorfällen:
+In case of security incidents:
 
-1. System-Administrator informieren
-2. Logs bereitstellen
-3. Vorfalldokumentation erstellen
+1. Notify the system administrator
+2. Provide relevant logs
+3. Document the incident
 
-### Incident-Ablauf (Diagramm)
+### Incident Workflow (Diagram)
 
 ```mermaid
 %%{ init: { "theme": "default" } }%%
 flowchart TD
-    A[Vorfall erkannt] --> B[System isolieren]
-    B --> C[Logs sichern]
-    C --> D[Zugänge sperren]
-    D --> E[Ursache analysieren]
-    E --> F[Ausmaß bewerten]
-    F --> G[Dokumentation erstellen]
-    G --> H[System bereinigen]
-    H --> I[Updates & Fixes einspielen]
-    I --> J[System wieder aktivieren]
+    A[Incident Detected] --> B[Isolate System]
+    B --> C[Secure Logs]
+    C --> D[Revoke Access]
+    D --> E[Analyze Root Cause]
+    E --> F[Assess Impact]
+    F --> G[Document Incident]
+    G --> H[Clean System]
+    H --> I[Apply Updates & Fixes]
+    I --> J[Reactivate System]
 ```

@@ -1,68 +1,68 @@
 # Website Access Control Basic
 
-Ein System zum Verwalten und Ausliefern geschützter Dateien in WordPress.
+A system for managing and delivering protected files in WordPress.
 
 ## Features
 
-- Speicherung von Dateien außerhalb des WebRoots
-- Rollenbasierte Zugriffskontrolle
-- Effizientes Streaming großer Dateien
-- Schutz vor unbefugtem Zugriff
+- Stores files outside the WebRoot
+- Role-based access control
+- Efficient streaming of large files
+- Protection against unauthorized access
 
 ## Installation
 
-### Schnellstart
+### Quick Start
 
-1. Laden Sie die aktuellen Release-Dateien herunter:
+1. Download the latest release files:
    - [protected.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/protected.zip)
    - [secure-files.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/secure-files.zip)
 
-2. Entpacken Sie die Dateien:
-   - `protected/` in `public_html/` kopieren. Damit dieses Verzeichnis innerhalb des WebRoots platziert ist.
-   - `secure-files/` unterhalb `public_html/` damit das Verzeichnis außerhalb des WebRoots liegt.
+2. Extract the files:
+   - Copy `protected/` into `public_html/` so it resides inside the WebRoot.
+   - Place `secure-files/` outside `public_html/` to keep it outside the WebRoot.
 
-3. WordPress konfigurieren:
+3. Configure WordPress:
    ```php
    define('SECURE_FILE_PATH', dirname(dirname(ABSPATH)) . '/secure-files');
    ```
 
-### Detaillierte Anleitung
+### Detailed Instructions
 
-Siehe [Installationsanleitung](docs/installation.md) für eine detaillierte Beschreibung.
+See the [Installation Guide](docs/installation.md) for full setup details.
 
-## Dokumentation
+## Documentation
 
-- [Technische Dokumentation](docs/technical.md) - Detaillierte technische Informationen
-- [Konfiguration](docs/configuration.md) - Konfigurationsmöglichkeiten
-- [Fehlerbehebung](docs/troubleshooting.md) - Lösungen für häufige Probleme
-- [Sicherheit](docs/security.md) - Sicherheitshinweise und Best Practices
-- [Changelog](docs/changelog.md) - Versionshistorie
+- [Technical Documentation](docs/technical.md) – In-depth technical information
+- [Configuration](docs/configuration.md) – Configuration options
+- [Troubleshooting](docs/troubleshooting.md) – Solutions to common problems
+- [Security](docs/security.md) – Security notes and best practices
+- [Changelog](docs/changelog.md) – Version history
 
 ## Releases
 
-### Aktuelle Version
+### Current Version
 - Version: [v1.0.0](https://github.com/your-username/Website-Access-Control-Basic/releases/latest)
 - Downloads:
   - [protected.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/protected.zip)
   - [secure-files.zip](https://github.com/your-username/Website-Access-Control-Basic/releases/latest/download/secure-files.zip)
 
-### Ältere Versionen
-Alle Releases finden Sie in der [Release-Übersicht](https://github.com/your-username/Website-Access-Control-Basic/releases).
+### Older Versions
+Find all releases in the [Release Overview](https://github.com/your-username/Website-Access-Control-Basic/releases).
 
-## Bekannte Probleme
+## Known Issues
 
-- Große Dateien (>100MB) können bei einigen Hosting-Anbietern zu Timeouts führen
-- Einige Hosting-Anbieter erlauben keinen Zugriff außerhalb des WebRoots
-- Manche PHP-Konfigurationen limitieren die maximale Dateigröße
+- Large files (>100MB) may cause timeouts on some hosting providers
+- Some hosting environments do not support access outside the WebRoot
+- Certain PHP configurations may limit the maximum file size
 
-## Beitragen
+## Contributing
 
-1. Fork erstellen
-2. Feature-Branch erstellen (`git checkout -b feature/AmazingFeature`)
-3. Änderungen committen (`git commit -m 'Add some AmazingFeature'`)
-4. Branch pushen (`git push origin feature/AmazingFeature`)
-5. Pull Request erstellen
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push the branch (`git push origin feature/AmazingFeature`)
+5. Create a pull request
 
-## Lizenz
+## License
 
-Dieses Projekt ist unter der MIT-Lizenz lizenziert. Siehe [LICENSE](LICENSE) für Details.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.

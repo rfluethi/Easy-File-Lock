@@ -1,16 +1,16 @@
-# Fehlerbehebung
+# Troubleshooting Guide
 
-Diese Anleitung unterstützt Administrator\:innen und Entwickler\:innen beim Diagnostizieren und Beheben typischer Probleme im Zugriffssystem geschützter Dateien.
+This guide assists administrators and developers in diagnosing and resolving common issues in the protected file access system.
 
-## Häufige Probleme
+## Common Issues
 
-### Zugriffsprobleme
+### Access Issues
 
-#### Problem: Benutzer kann nicht auf Dateien zugreifen
+#### Problem: User cannot access files
 
-**Schritte zur Behebung:**
+**Steps to resolve:**
 
-1. Öffne `secure-config.php` und überprüfe die Rollenzuordnung:
+1. Open `secure-config.php` and check the role mappings:
 
    ```php
    $role_mappings = [
@@ -18,53 +18,53 @@ Diese Anleitung unterstützt Administrator\:innen und Entwickler\:innen beim Dia
        'contributor' => 'group-2'
    ];
    ```
-2. Vergewissere dich, dass der Benutzer in WordPress die korrekte Rolle besitzt.
-3. Prüfe die Verzeichnisberechtigungen (mind. 755 für Ordner, 644 für Dateien).
-4. Konsultiere bei Bedarf die Log-Datei unter: `secure-files/logs/access.log`
+2. Ensure the user has the correct role in WordPress.
+3. Check directory permissions (at least 755 for folders, 644 for files).
+4. If needed, consult the log file at: `secure-files/logs/access.log`
 
-#### Problem: Datei wird nicht gefunden
+#### Problem: File not found
 
-**Schritte zur Behebung:**
+**Steps to resolve:**
 
-1. Überprüfe die URL (z. B. `/protected/group-1/example-1.pdf`).
-2. Stelle sicher, dass die Datei im passenden Gruppenverzeichnis liegt.
-3. Überprüfe, ob die Datei korrekt benannt und lesbar ist (Berechtigung 644).
+1. Verify the URL (e.g., `/protected/group-1/example-1.pdf`).
+2. Ensure the file exists in the correct group directory.
+3. Check if the file is correctly named and readable (permission 644).
 
-### Fehler 404 – Datei nicht gefunden
+### Error 404 – File Not Found
 
-**Mögliche Ursachen:**
+**Possible causes:**
 
-* Falsche URL
-* Datei liegt im falschen Ordner
-* Falsche `SECURE_FILE_PATH`-Konstante
+* Incorrect URL
+* File in the wrong folder
+* Incorrect `SECURE_FILE_PATH` constant
 
-**Lösungen:**
+**Solutions:**
 
-1. Vergleiche die URL mit der Serverstruktur:
+1. Compare the URL with the server structure:
 
    ```
-   /secure-files/group-1/example-1.pdf  // für Subscriber
-   /secure-files/group-2/example-2.pdf  // für Contributor
+   /secure-files/group-1/example-1.pdf  // for subscriber
+   /secure-files/group-2/example-2.pdf  // for contributor
    ```
-2. Überprüfe in `wp-config.php`:
+2. Check in `wp-config.php`:
 
    ```php
    define('SECURE_FILE_PATH', dirname(dirname(ABSPATH)) . '/secure-files');
    ```
-3. Prüfe auf Tippfehler im Dateinamen.
+3. Check for typos in the filename.
 
-### Fehler 403 – Zugriff verweigert
+### Error 403 – Access Denied
 
-**Mögliche Ursachen:**
+**Possible causes:**
 
-* Benutzerrolle fehlt oder ist nicht korrekt zugewiesen
-* Rolle nicht im Zugriffsskript registriert
-* Datei liegt im falschen Verzeichnis
+* Missing or incorrect user role
+* Role not registered in the access script
+* File in the wrong directory
 
-**Lösungen:**
+**Solutions:**
 
-1. Prüfe die Benutzerrolle in WordPress.
-2. Kontrolliere die Rollen-Konfiguration in `secure-config.php`:
+1. Check the user's role in WordPress.
+2. Review the role configuration in `secure-config.php`:
 
    ```php
    $role_folders = [
@@ -72,56 +72,56 @@ Diese Anleitung unterstützt Administrator\:innen und Entwickler\:innen beim Dia
        'contributor' => 'group-2'
    ];
    ```
-3. Stelle sicher, dass Datei und Rolle übereinstimmen.
+3. Ensure the file and role match appropriately.
 
-### Endlose Weiterleitung (Loop)
+### Infinite Redirect (Loop)
 
-**Mögliche Ursachen:**
+**Possible causes:**
 
-* Cookie-Konflikt zwischen www / non-www
-* Falscher Pfad zu `wp-load.php`
-* WordPress-Session ungültig
+* Cookie conflict between www/non-www
+* Incorrect path to `wp-load.php`
+* Invalid WordPress session
 
-**Lösungen:**
+**Solutions:**
 
-1. Prüfe die Domain-Konfiguration in WordPress.
-2. Verifiziere in `check-access.php`:
+1. Check domain configuration in WordPress.
+2. Verify in `check-access.php`:
 
    ```php
    require_once WP_CORE_PATH;
    ```
-3. Leere den Browser-Cache und lösche Cookies.
+3. Clear browser cache and cookies.
 
-## Download-Probleme
+## Download Issues
 
-### Abgebrochene Downloads
+### Interrupted Downloads
 
-**Ursachen:**
+**Causes:**
 
-* Zeitlimit in PHP überschritten
-* Ungünstige Chunk-Größe
-* Netzwerkprobleme / Verbindungs-Timeouts
+* PHP timeout exceeded
+* Inappropriate chunk size
+* Network issues / timeouts
 
-**Lösungen:**
+**Solutions:**
 
-1. Passe `CHUNK_SIZE` und `MAX_DIRECT_DOWNLOAD_SIZE` in `secure-config.php` an:
+1. Adjust `CHUNK_SIZE` and `MAX_DIRECT_DOWNLOAD_SIZE` in `secure-config.php`:
 
    ```php
    define('CHUNK_SIZE', 4194304);              // 4 MB
    define('MAX_DIRECT_DOWNLOAD_SIZE', 524288); // 512 KB
    ```
-2. Server-Konfiguration auf Timeout prüfen (`max_execution_time`).
+2. Check server timeout settings (`max_execution_time`).
 
-### Falsche MIME-Types
+### Incorrect MIME Types
 
-**Symptome:**
+**Symptoms:**
 
-* Datei wird im Browser angezeigt statt heruntergeladen
-* Fehlermeldung „nicht unterstützt“
+* File opens in the browser instead of downloading
+* Error: "unsupported format"
 
-**Lösungen:**
+**Solutions:**
 
-1. Trage fehlende MIME-Types in `secure-config.php` ein:
+1. Add missing MIME types in `secure-config.php`:
 
    ```php
    $allowed_mime_types = [
@@ -130,79 +130,79 @@ Diese Anleitung unterstützt Administrator\:innen und Entwickler\:innen beim Dia
        'html' => 'text/html'
    ];
    ```
-2. Prüfe Dateiendungen und Dateityp-Konsistenz.
+2. Verify file extensions and type consistency.
 
-## Server-Probleme
+## Server Issues
 
-### Fehler 500 – Interner Serverfehler
+### Error 500 – Internal Server Error
 
-**Mögliche Ursachen:**
+**Possible causes:**
 
-* Fehlerhafte PHP-Konfiguration
-* Falsche Berechtigungen
-* Fehlende Extensions
+* Invalid PHP configuration
+* Incorrect permissions
+* Missing PHP extensions
 
-**Lösungen:**
+**Solutions:**
 
-1. Aktiviere den Debug-Modus:
+1. Enable debug mode:
 
    ```php
    define('DEBUG_MODE', true);
    ```
-2. Prüfe Berechtigungen:
+2. Check permissions:
 
    ```
    secure-files: 755
    config: 755
    secure-config.php: 644
    ```
-3. Stelle sicher, dass Extensions wie `fileinfo`, `mbstring` und `openssl` aktiv sind.
+3. Ensure required extensions (`fileinfo`, `mbstring`, `openssl`) are active.
 
-### Langsame Downloads / Performance
+### Slow Downloads / Performance
 
-**Ursachen:**
+**Causes:**
 
-* Chunk-Größe zu klein
-* Hohe gleichzeitige Last
-* Ressourcenbeschränkung auf Serverebene
+* Chunk size too small
+* High concurrent load
+* Server resource limits
 
-**Lösungen:**
+**Solutions:**
 
-1. Erhöhe `CHUNK_SIZE` schrittweise.
-2. Nutze Server-seitiges Rate-Limiting.
-3. Analysiere Serverauslastung (RAM, CPU, Disk I/O).
+1. Gradually increase `CHUNK_SIZE`.
+2. Use server-side rate limiting.
+3. Analyze server load (RAM, CPU, Disk I/O).
 
-### Cache-Probleme
+### Cache Issues
 
-**Symptome:**
+**Symptoms:**
 
-* Änderungen an Dateien werden nicht angezeigt
-* Alte Versionen im Browser
+* File changes not reflected
+* Old versions shown in browser
 
-**Lösungen:**
+**Solutions:**
 
-1. Überprüfe die Cache-Control-Einstellungen:
+1. Check cache-control settings:
 
    ```php
    define('CACHE_CONTROL', 'private, no-cache, no-store, must-revalidate');
    ```
-2. Lösche Browser-Cache, ggf. Cache-Plugin deaktivieren
+2. Clear browser cache; disable caching plugins if necessary.
 
-## Schnellcheck: Zugriffsfehler
+## Quick Checklist: Access Errors
 
-* [ ] Benutzer ist eingeloggt?
-* [ ] Rolle korrekt konfiguriert?
-* [ ] Datei liegt im richtigen Gruppenordner?
-* [ ] MIME-Type erlaubt?
-* [ ] Berechtigungen korrekt gesetzt?
-* [ ] Zugriff wird in `access.log` dokumentiert?
+* [ ] Is the user logged in?
+* [ ] Is the role configured correctly?
+* [ ] Is the file in the correct group folder?
+* [ ] Is the MIME type allowed?
+* [ ] Are permissions set correctly?
+* [ ] Is access being logged in `access.log`?
 
-## Hinweis
+## Note
 
-Für weiterführende Diagnosen empfiehlt sich die regelmäßige Prüfung der Log-Datei:
+For advanced diagnostics, regularly review the log file:
 
 ```
 /secure-files/logs/access.log
 ```
 
-Diese Datei enthält Hinweise zu Blockierungen, Zugriffen und Fehlermeldungen.
+This file contains information about blocked requests, access attempts, and error messages.

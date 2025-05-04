@@ -1,26 +1,26 @@
-# Technische Dokumentation
+# Technical Documentation
 
-Diese Dokumentation richtet sich an Entwickler\:innen oder Administrator\:innen, die die Zugriffskontrolle auf geschützte Dateien serverseitig und rollenbasiert mit WordPress konfigurieren möchten.
+This documentation is intended for developers or administrators who want to configure server-side, role-based access control for protected files using WordPress.
 
-## Systemarchitektur
+## System Architecture
 
-### Verzeichnisstruktur
+### Directory Structure
 
 ```
-secure-files/                  # Außerhalb des WebRoots (nicht erreichbar)
+secure-files/                  # Outside WebRoot (not publicly accessible)
 ├── config/
-│   └── secure-config.php      # Konfigurationsdatei
+│   └── secure-config.php      # Configuration file
 ├── logs/
-│   └── access.log             # Log-Datei
+│   └── access.log             # Log file
 ├── group-1/
-│   ├── example-1.pdf          # Dateien für Benutzer mit Rolle "subscriber"
+│   ├── example-1.pdf          # Files for users with "subscriber" role
 │   └── ...
 └── group-2/
-    ├── example-2.pdf          # Dateien für Benutzer mit Rolle "contributor"
+    ├── example-2.pdf          # Files for users with "contributor" role
     └── ...
 ```
 
-### Berechtigungen
+### Permissions
 
 * `secure-files/`: 755 (drwxr-xr-x)
 * `secure-files/config/`: 755 (drwxr-xr-x)
@@ -28,149 +28,143 @@ secure-files/                  # Außerhalb des WebRoots (nicht erreichbar)
 * `secure-files/logs/access.log`: 644 (-rw-r--r--)
 * `secure-files/group-*/*`: 644 (-rw-r--r--)
 
-### Beispiel-URLs
+### Example URLs
 
-* Zugriff für Subscriber: `/protected/group-1/example-1.pdf`
-* Zugriff für Contributor: `/protected/group-2/example-2.pdf`
+* Access for Subscriber: `/protected/group-1/example-1.pdf`
+* Access for Contributor: `/protected/group-2/example-2.pdf`
 
 ## Performance
 
-### Download-Optimierung
+### Download Optimization
 
-* Direkte Downloads bis zu 1 MB
-* Chunked Downloads für größere Dateien
-* Chunk-Größe: 4 MB
-* Kein Caching für geschützte Dateien
+* Direct downloads up to 1 MB
+* Chunked downloads for larger files
+* Chunk size: 4 MB
+* No caching for protected files
 
-## Wartung
+## Maintenance
 
-### Regelmäßige Aufgaben
+### Regular Tasks
 
-* Log-Dateien überprüfen
-* Dateiberechtigungen prüfen
-* Integration mit WordPress testen
-* Sicherheits-Header validieren
+* Review log files
+* Check file permissions
+* Test WordPress integration
+* Validate security headers
 
 ### Backup
 
-* Regelmäßige Backups des Verzeichnisses `secure-files/`
-* Backups der Log-Dateien
-* Backup der Konfigurationsdatei
+* Regular backups of `secure-files/` directory
+* Backups of log files
+* Backup of configuration file
 
 ### Updates
 
-* WordPress aktualisieren
-* PHP-Version prüfen
-* Sicherheits-Header regelmäßig aktualisieren
-* MIME-Typen-Einstellungen überprüfen
+* Keep WordPress up to date
+* Check PHP version
+* Regularly update security headers
+* Review MIME type settings
 
-## Funktionsweise der Zugriffskontrolle
+## Access Control Functionality
 
-### .htaccess-Datei
+### .htaccess File
 
-Die `.htaccess`-Datei steuert die Zugriffskontrolle über serverseitige Rewrite-Regeln.
+The `.htaccess` file manages access control using server-side rewrite rules.
 
-**Schutz des Zugriffsskripts**
+**Protect access script**
 
 ```apache
 RewriteRule ^check-access\.php$ - [F,L]
 ```
 
-Verhindert den direkten Aufruf von `check-access.php`.
+Prevents direct access to `check-access.php`.
 
-**Verzeichnisanfragen**
+**Directory Requests**
 
 ```apache
 RewriteRule ^(.+/)$ /protected/check-access.php?file=$1index.html [QSA,L]
 ```
 
-Leitet Verzeichnisanfragen automatisch zur jeweiligen `index.html` weiter.
+Automatically redirects directory requests to `index.html`.
 
-**Dateianfragen**
+**File Requests**
 
 ```apache
 RewriteRule ^(.+)$ /protected/check-access.php?file=$1 [QSA,L]
 ```
 
-Alle Dateianfragen werden an `check-access.php` übergeben.
+All file requests are routed to `check-access.php`.
 
-**Cache-Kontrolle**
+**Cache Control**
 
 ```apache
 Header set Cache-Control "private, no-cache, no-store, must-revalidate"
 ```
 
-Verhindert die Zwischenspeicherung im Browser. Jeder Zugriff muss neu autorisiert werden.
+Prevents browser caching; each request must be authorized.
 
 ### check-access.php
 
-Dieses Skript prüft und verarbeitet jede eingehende Anfrage auf eine geschützte Datei:
+This script handles every request for a protected file:
 
-1. **Initialisierung**
+1. **Initialization**
 
-   * Lädt die Konfigurationsdatei
-   * Prüft das verfügbare Memory-Limit
-   * Integriert WordPress zur Rollenprüfung
+   * Loads the configuration file
+   * Checks available memory limit
+   * Integrates WordPress for role validation
 
-2. **Authentifizierung und Autorisierung**
+2. **Authentication and Authorization**
 
-   * Überprüft, ob ein Benutzer angemeldet ist
-   * Ermittelt die Benutzerrollen
-   * Validiert die Zugriffsberechtigung auf das angeforderte Verzeichnis
+   * Verifies user is logged in
+   * Retrieves user roles
+   * Validates access permission for the requested directory
 
-3. **Dateiprüfung und Sicherheit**
+3. **File Validation and Security**
 
-   * Bereinigt Dateinamen und verhindert Traversal-Angriffe
-   * Prüft Dateigröße und Existenz
-   * Validiert den MIME-Typ
+   * Sanitizes file name to prevent traversal attacks
+   * Checks file existence and size
+   * Validates MIME type
 
-4. **Dateiversand**
+4. **File Transfer**
 
-   * Kleine Dateien werden direkt übertragen
-   * Große Dateien werden blockweise (chunked) übertragen
+   * Small files are sent directly
+   * Large files are sent in chunks
 
-5. **Protokollierung**
+5. **Logging**
 
-   * Dokumentiert alle Anfragen im Log
-   * Rotiert Log-Dateien bei Überschreitung der Maximalgröße
+   * Logs all requests
+   * Rotates logs when maximum size is exceeded
 
-### Detaillierte Funktionsbeschreibung
+### Detailed Function Overview
 
-#### Konfigurationsprüfung
+#### Configuration Check
 
 ```php
 $config_file = dirname(dirname(__DIR__)) . '/secure-files/config/secure-config.php';
 if (!file_exists($config_file)) {
-    die('Fehler: Konfigurationsdatei nicht gefunden.');
+    die('Error: Configuration file not found.');
 }
 require_once $config_file;
 ```
 
-Lädt die Konfigurationsdatei und bricht ab, wenn sie fehlt.
-
-#### Speicherprüfung
+#### Memory Check
 
 ```php
 $memory_limit = ini_get('memory_limit');
 if (intval($memory_limit) < intval(MIN_MEMORY_LIMIT)) {
-    die('PHP Memory-Limit zu niedrig.');
+    die('PHP memory limit too low.');
 }
 ```
 
-Stellt sicher, dass ausreichend Arbeitsspeicher zur Verfügung steht.
-
-#### WordPress-Integration
+#### WordPress Integration
 
 ```php
 if (!file_exists(WP_CORE_PATH)) {
-    die('Fehler: WordPress nicht gefunden.');
+    die('Error: WordPress not found.');
 }
 require_once WP_CORE_PATH;
 ```
 
-Lädt WordPress zur Benutzerprüfung.
-
-#### Debug-Modus
+#### Debug Mode
 
 ```php
 if (DEBUG_MODE) {
@@ -179,9 +173,7 @@ if (DEBUG_MODE) {
 }
 ```
 
-Aktiviert detaillierte Fehlermeldungen im Entwicklungsmodus.
-
-#### Pfaddefinition
+#### Path Definition
 
 ```php
 if (!defined('SECURE_FILE_PATH')) {
@@ -189,27 +181,23 @@ if (!defined('SECURE_FILE_PATH')) {
 }
 ```
 
-Definiert den Pfad zum Verzeichnis mit geschützten Dateien.
-
-#### Logging-System
+#### Logging System
 
 ```php
 if (!is_dir(LOG_DIR)) {
     if (!mkdir(LOG_DIR, 0755, true)) {
-        die('Log-Verzeichnis konnte nicht erstellt werden');
+        die('Could not create log directory');
     }
 }
 if (!file_exists(LOG_FILE)) {
     if (!touch(LOG_FILE)) {
-        die('Log-Datei konnte nicht erstellt werden');
+        die('Could not create log file');
     }
     chmod(LOG_FILE, 0644);
 }
 ```
 
-Stellt sicher, dass das Log-Verzeichnis und die Log-Datei existieren.
-
-#### Log-Rotation
+#### Log Rotation
 
 ```php
 if (file_exists(LOG_FILE) && filesize(LOG_FILE) > LOG_MAX_SIZE) {
@@ -224,9 +212,7 @@ if (file_exists(LOG_FILE) && filesize(LOG_FILE) > LOG_MAX_SIZE) {
 }
 ```
 
-Rotiert alte Log-Dateien bei Überschreitung der Maximalgröße.
-
-#### Benutzerprüfung
+#### User Check
 
 ```php
 $current = wp_get_current_user();
@@ -236,21 +222,17 @@ if (!is_user_logged_in()) {
 }
 ```
 
-Nur angemeldete Benutzer dürfen auf Dateien zugreifen.
-
-#### Dateinamen-Validierung
+#### File Name Validation
 
 ```php
 $rel = $_GET['file'] ?? '';
-$rel = ltrim(str_replace(['..', './', '\'], '', $rel), '/');
+$rel = ltrim(str_replace(['..', './', '\\'], '', $rel), '/');
 if ($rel === '' || substr($rel, -1) === '/') {
     $rel .= 'index.html';
 }
 ```
 
-Bereinigt gefährliche Zeichen im Pfad und behandelt Verzeichnisaufrufe.
-
-#### Sicherheitsprüfung
+#### Security Check
 
 ```php
 if (!preg_match('/^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/', $rel)) {
@@ -259,9 +241,7 @@ if (!preg_match('/^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/', $rel)) {
 }
 ```
 
-Verhindert Zugriffe auf unsichere Dateipfade.
-
-#### Rollenprüfung
+#### Role Check
 
 ```php
 $roles = $current->roles;
@@ -280,9 +260,7 @@ foreach ($roles as $role) {
 }
 ```
 
-Erlaubt Zugriff, wenn der Benutzer die passende Rolle für das Zielverzeichnis hat.
-
-#### Dateiprüfung
+#### File Validation
 
 ```php
 $abs = realpath(SECURE_FILE_PATH . '/' . $rel);
@@ -296,9 +274,7 @@ if (
 }
 ```
 
-Prüft, ob die Datei existiert und im zulässigen Verzeichnis liegt.
-
-#### Dateigrößenprüfung
+#### File Size Check
 
 ```php
 $size = filesize($abs);
@@ -308,9 +284,7 @@ if ($size === false || $size > MAX_FILE_SIZE) {
 }
 ```
 
-Blockiert den Zugriff auf zu große Dateien.
-
-#### MIME-Type und Header
+#### MIME Type and Headers
 
 ```php
 $ext = strtolower(pathinfo($abs, PATHINFO_EXTENSION));
@@ -323,9 +297,7 @@ foreach (SECURITY_HEADERS as $header) {
 header("Content-Length: $size");
 ```
 
-Setzt den korrekten MIME-Type und alle notwendigen Sicherheits-Header.
-
-#### Dateiübertragung
+#### File Delivery
 
 ```php
 if ($size > MAX_DIRECT_DOWNLOAD_SIZE) {
@@ -342,37 +314,33 @@ if ($size > MAX_DIRECT_DOWNLOAD_SIZE) {
 }
 ```
 
-Verwendet Chunked-Download für große Dateien und direkten Transfer für kleine Dateien.
+### Typical Download Flow
 
-### Typischer Ablauf eines Downloads
+1. A user accesses a download URL within the protected area.
+2. `.htaccess` redirects the request to `check-access.php`.
+3. The script validates configuration, login status, user role, file path, permissions, and MIME type.
+4. If all checks pass, the file is delivered with appropriate headers.
+5. Invalid requests are denied and logged.
 
-1. Ein Benutzer ruft eine Download-URL im geschützten Bereich auf.
-2. Die `.htaccess`-Datei leitet die Anfrage an `check-access.php` weiter.
-3. Das Skript prüft Konfiguration, Login-Status, Benutzerrolle, Dateipfad, Berechtigungen und Dateityp.
-4. Falls alle Bedingungen erfüllt sind, wird die Datei mit entsprechenden Headern übertragen.
-5. Fehlerhafte Anfragen werden abgewiesen und im Log erfasst.
-
-### Ablaufdiagramm
-
-Das Ablaufdiagramm zeigt die logische Entscheidungskette vom Aufruf einer Datei bis zur Zugriffskontrolle. Es visualisiert, welche Prüfungen in welcher Reihenfolge erfolgen und ob der Zugriff erlaubt oder verweigert wird.
+### Flowchart
 
 ```mermaid
 %%{ init: { "theme": "default" } }%%
 graph TD
-    A[Download-Link aufgerufen] --> B{.htaccess Rewrite}
-    B -->|Verzeichnis| C[/index.html anzeigen/]
-    B -->|Datei| D[check-access.php]
-    D --> E[Konfigurationsprüfung]
-    E --> F[Benutzerprüfung]
-    F --> G[Datei-Validierung]
-    G --> H{Zugriff erlaubt?}
-    H -->|Ja| I[Datei senden]
-    H -->|Nein| J[Fehlermeldung ausgeben]
-    I --> K[Zugriff protokollieren]
+    A[Download Link Accessed] --> B{.htaccess Rewrite}
+    B -->|Directory| C[/Display index.html/]
+    B -->|File| D[check-access.php]
+    D --> E[Config Check]
+    E --> F[User Check]
+    F --> G[File Validation]
+    G --> H{Access Allowed?}
+    H -->|Yes| I[Send File]
+    H -->|No| J[Return Error]
+    I --> K[Log Access]
     J --> K
 ```
 
-### Sequenzdiagramm
+### Sequence Diagram
 
 ```mermaid
 %%{ init: { "theme": "default" } }%%
@@ -382,20 +350,193 @@ sequenceDiagram
     participant Script
     participant WordPress
 
-    User->>Server: Anfrage /protected/group-1/datei.pdf
-    Server->>Script: Weiterleitung via .htaccess
-    Script->>Script: Konfigurationsprüfung
-    Script->>WordPress: Benutzerrollen prüfen
-    WordPress-->>Script: Rollen zurückgeben
-    Script->>Script: Datei validieren & MIME-Type setzen
-    Script-->>User: Datei übertragen
-    Script->>Script: Zugriff ins Log schreiben
+    User->>Server: Request /protected/group-1/file.pdf
+    Server->>Script: Redirect via .htaccess
+    Script->>Script: Config Check
+    Script->>WordPress: Check User Roles
+    WordPress-->>Script: Return Roles
+    Script->>Script: Validate File & Set MIME
+    Script-->>User: Deliver File
+    Script->>Script: Log Access
 ```
 
-Das Sequenzdiagramm veranschaulicht den zeitlichen Ablauf der Kommunikation zwischen den beteiligten Komponenten – Benutzer, Webserver, Zugriffsskript und WordPress. Es macht sichtbar, wie Anfragen weitergereicht und geprüft werden, bevor eine Datei ausgeliefert wird.
+### Diagram Differences
 
-### Unterschied der Diagramme
+The flowchart shows logical decision-making and conditions — ideal for understanding overall logic.
 
-Das Ablaufdiagramm stellt logische Entscheidungswege und Bedingungen dar – ideal zur Übersicht über die Funktionslogik.
+The sequence diagram visualizes the time-based flow between components — best for analyzing interfaces and interactions.
 
-Das Sequenzdiagramm dagegen zeigt die zeitliche Abfolge von Nachrichten und Interaktionen zwischen den beteiligten Komponenten – es eignet sich besonders zur Analyse von Schnittstellen und Kommunikationsflüssen.
+### MIME Types
+
+The allowed MIME types are defined in `secure-config.php`. Here is an excerpt of the default configuration:
+
+```php
+$allowed_mime_types = [
+    'pdf'  => 'application/pdf',
+    'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'jpg'  => 'image/jpeg',
+    'png'  => 'image/png'
+];
+```
+
+Additional MIME types can be added in `secure-config.php`. A complete list of all possible MIME types can be found in the official IANA MIME types database.
+
+### Error Handling
+
+The system handles various error cases and returns appropriate HTTP status codes:
+
+1. **400 Bad Request**
+   - Invalid filename (contains forbidden characters)
+   - Missing or invalid parameters
+   - Cause: The file request contains invalid characters or is malformed
+   - Solution: Check the URL and ensure only allowed characters are used
+
+2. **403 Forbidden**
+   - User is not logged in
+   - User does not have the required role
+   - File is in the wrong directory
+   - Cause: Missing permissions
+   - Solution: Check user role and directory structure
+
+3. **404 Not Found**
+   - File does not exist
+   - File is outside the allowed directory
+   - Cause: Incorrect file path or file was deleted
+   - Solution: Verify the file path and directory structure
+
+4. **413 Payload Too Large**
+   - File exceeds maximum size limit
+   - Cause: File is larger than `MAX_FILE_SIZE`
+   - Solution: Reduce file size or increase the limit
+
+5. **500 Internal Server Error**
+   - Error reading the file
+   - Error creating log directory
+   - Error writing to log file
+   - Cause: Server issues or missing permissions
+   - Solution: Check server logs and permissions
+
+### Debug Mode
+
+The debug mode (`DEBUG_MODE`) enables additional functions for troubleshooting and development:
+
+1. **Error Display**
+   ```php
+   if (DEBUG_MODE) {
+       error_reporting(E_ALL);
+       ini_set('display_errors', 1);
+   }
+   ```
+   - Shows all PHP errors and warnings
+   - Disables error suppression
+   - Recommended for development environments only
+
+2. **Enhanced Logging**
+   - Logs all user roles
+   - Stores detailed information about file access
+   - Records chunked download status
+   - Example log entries:
+     ```
+     Current roles: subscriber, contributor
+     File transfer: group-1/example.pdf (application/pdf, 1048576 bytes)
+     Chunk 1: 4194304 bytes transferred
+     ```
+
+3. **Performance Monitoring**
+   - Measures transfer time
+   - Counts number of chunks
+   - Logs total size of transferred data
+
+4. **Security Notes**
+   - Debug mode should be disabled in production environments
+   - It may expose sensitive information
+   - It may impact performance
+
+### Log Rotation
+
+The system manages log files automatically:
+
+1. **Size Limit**
+   - Log files are rotated at 5 MB size
+   - Maximum size is defined in `LOG_MAX_SIZE`
+   - Example: `define('LOG_MAX_SIZE', 5242880); // 5 MB`
+
+2. **Filenames**
+   - Old log files are renamed with timestamp
+   - Format: `access.log.YYYY-MM-DD-HH-mm-ss`
+   - Example: `access.log.2024-03-20-14-30-00`
+
+3. **Number of Log Files**
+   - Maximum of 5 log files are kept
+   - Oldest log file is automatically deleted
+   - Configurable via `LOG_MAX_FILES`
+
+4. **Rotation Process**
+   ```php
+   if (file_exists(LOG_FILE) && filesize(LOG_FILE) > LOG_MAX_SIZE) {
+       $old_logs = glob(LOG_FILE . '.*');
+       if (count($old_logs) >= LOG_MAX_FILES) {
+           usort($old_logs, function($a, $b) {
+               return filemtime($a) - filemtime($b);
+           });
+           unlink($old_logs[0]);
+       }
+       rename(LOG_FILE, LOG_FILE . '.' . date('Y-m-d-H-i-s'));
+   }
+   ```
+
+### Security Aspects
+
+The system implements several security measures:
+
+1. **Filename Validation**
+   ```php
+   if (!preg_match('/^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/', $rel)) {
+       status_header(400);
+       exit('Invalid filename');
+   }
+   ```
+   - Prevents directory traversal attacks
+   - Allows only safe characters
+   - Blocks path manipulations
+
+2. **Security Headers**
+   ```php
+   define('SECURITY_HEADERS', [
+       'X-Content-Type-Options: nosniff',
+       'X-Frame-Options: DENY',
+       'X-XSS-Protection: 1; mode=block',
+       'Referrer-Policy: strict-origin-when-cross-origin',
+       'Content-Security-Policy: default-src \'self\'',
+       'Strict-Transport-Security: max-age=31536000; includeSubDomains'
+   ]);
+   ```
+   - Prevents MIME type sniffing
+   - Blocks clickjacking
+   - Enables XSS protection
+   - Controls referrer information
+   - Enforces HTTPS
+
+3. **Cache Control**
+   ```php
+   define('CACHE_CONTROL', 'private, no-cache, no-store, must-revalidate');
+   ```
+   - Prevents file caching
+   - Enforces new authorization for each access
+   - Protects against outdated file versions
+
+4. **MIME Type Validation**
+   - Checks file type before download
+   - Prevents script execution
+   - Restricts to allowed file types
+
+5. **Permission Check**
+   - Verifies user role
+   - Checks directory permissions
+   - Prevents unauthorized access
+
+6. **Logging and Monitoring**
+   - Logs all access attempts
+   - Stores errors and warnings
+   - Enables tracking of security incidents

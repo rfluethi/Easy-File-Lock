@@ -1,44 +1,44 @@
-# Installation
+# Installation Guide
 
-## Überblick
+## Overview
 
-Diese Anleitung beschreibt Schritt für Schritt die Installation und Einrichtung eines Systems zur rollenbasierten Dateifreigabe mit WordPress.  
-Sie richtet sich an technisch versierte Anwender mit Zugriff auf das Server-Dateisystem und Grundkenntnissen in WordPress und PHP.
+This guide provides a step-by-step walkthrough for installing and setting up a role-based file sharing system using WordPress.  
+It is intended for technically proficient users with access to the server's file system and a basic understanding of WordPress and PHP.
 
-## Schnellstart
+## Quick Start
 
-1. **ZIP-Dateien herunterladen**
+1. **Download ZIP Files**
 
    - `protected.zip`
    - `secure-files.zip`
 
-2. **Dateien entpacken und kopieren**
+2. **Extract and Copy Files**
 
-   - Inhalt von `protected.zip` in das **WebRoot-Verzeichnis** kopieren
-   - Inhalt von `secure-files.zip` in ein Verzeichnis **außerhalb des WebRoots** ablegen
+   - Copy the contents of `protected.zip` into the **WebRoot directory**
+   - Place the contents of `secure-files.zip` in a directory **outside the WebRoot**
 
-   **Was ist das WebRoot-Verzeichnis?**  
-   Das WebRoot ist das öffentlich erreichbare Hauptverzeichnis des Webservers – z. B. `htdocs`, `www`, `html` oder `public_html`. Dateien außerhalb dieses Verzeichnisses sind nicht direkt über den Browser erreichbar.
+   **What is the WebRoot directory?**  
+   The WebRoot is the publicly accessible root directory of your web server – e.g., `htdocs`, `www`, `html`, or `public_html`. Files outside this directory are not directly accessible via a browser.
 
-3. **WordPress-Konfiguration anpassen**
+3. **Modify WordPress Configuration**
 
-   In der Datei `wp-config.php` folgende Zeile ergänzen:
+   Add the following line to your `wp-config.php` file:
 
    ```php
    define('SECURE_FILE_PATH', dirname(dirname(ABSPATH)) . '/secure-files');
    ```
 
-## Voraussetzungen
+## Requirements
 
-**Systemanforderungen:**
+**System Requirements:**
 
-- Apache 2.4 oder höher mit aktiviertem `mod_rewrite`
-- PHP 7.4 oder höher
-- mindestens 128 MB PHP Memory-Limit
-- Schreibrechte für das Log-Verzeichnis
-- ausreichend Speicherplatz für geschützte Dateien
+- Apache 2.4 or later with `mod_rewrite` enabled
+- PHP 7.4 or later
+- At least 128 MB PHP memory limit
+- Write permissions for the log directory
+- Sufficient storage space for protected files
 
-**PHP-Extensions:**
+**PHP Extensions:**
 
 - `fileinfo`
 - `mbstring`
@@ -46,23 +46,23 @@ Sie richtet sich an technisch versierte Anwender mit Zugriff auf das Server-Date
 
 **WordPress:**
 
-- Version 5.0 oder höher
-- Benutzerrollen aktiviert
-- Schreibrechte im WordPress-Verzeichnis
+- Version 5.0 or later
+- User roles enabled
+- Write permissions in the WordPress directory
 
-## Verzeichnisstruktur auf dem Server
+## Server Directory Structure
 
-Nach der Installation sollte die Struktur wie folgt aussehen:
+After installation, your directory structure should look like this:
 
 ```txt
 /var/www/
-├── html/                      ← WebRoot (öffentlich erreichbar)
-│   ├── wordpress/             ← WordPress-Installation
+├── html/                      ← WebRoot (publicly accessible)
+│   ├── wordpress/             ← WordPress installation
 │   │   └── wp-load.php
-│   └── protected/             ← aus protected.zip, im WebRoot
+│   └── protected/             ← from protected.zip, within WebRoot
 │       ├── .htaccess
 │       └── check-access.php
-└── secure-files/              ← aus secure-files.zip, außerhalb des WebRoots
+└── secure-files/              ← from secure-files.zip, outside WebRoot
     ├── config/
     │   └── secure-config.php
     ├── logs/
@@ -73,93 +73,94 @@ Nach der Installation sollte die Struktur wie folgt aussehen:
         └── example-2.pdf
 ```
 
-## Dateiberechtigungen setzen
+## Set File Permissions
 
-**Verzeichnisse:**
+**Directories:**
 
-- `secure-files`, `config`, `logs`, `group-*`: Lese- und Ausführungsrechte (z. B. `755`)
+- `secure-files`, `config`, `logs`, `group-*`: Read and execute permissions (e.g., `755`)
 
-**Dateien:**
+**Files:**
 
-- `secure-config.php`, `access.log`, Dateien in `group-*`: Leserechte (z. B. `644`)
+- `secure-config.php`, `access.log`, files in `group-*`: Read permissions (e.g., `644`)
 
-## Konfiguration
+## Configuration
 
-### a) WordPress-Konfiguration (`wp-config.php`)
+### a) WordPress Configuration (`wp-config.php`)
 
 ```php
 define('SECURE_FILE_PATH', dirname(dirname(ABSPATH)) . '/secure-files');
 ```
 
-### b) Secure-Konfiguration (`secure-files/config/secure-config.php`)
+### b) Secure Configuration (`secure-files/config/secure-config.php`)
 
 ```php
-// Pfad zur WordPress-Installation
+// Path to the WordPress installation
 define('WP_CORE_PATH', dirname(dirname(__DIR__)) . '/wordpress/wp-load.php');
-// Alternativ, wenn WordPress direkt im WebRoot liegt:
+// Alternatively, if WordPress is located directly in WebRoot:
 // define('WP_CORE_PATH', dirname(dirname(__DIR__)) . '/wp-load.php');
 
-// Log-Verzeichnis und Log-Datei
+// Log directory and file
 define('LOG_DIR', dirname(__DIR__) . '/logs');
 define('LOG_FILE', LOG_DIR . '/access.log');
 
-// Rollen-Zuordnung
+// Role assignment
 $role_folders = [
     'subscriber'  => 'group-1',
     'contributor' => 'group-2'
 ];
 
-// Download-Einstellungen
+// Download settings
 define('MAX_DIRECT_DOWNLOAD_SIZE', 1048576); // 1 MB
 define('CHUNK_SIZE', 4194304);               // 4 MB
 define('MIN_MEMORY_LIMIT', '128M');
 ```
 
-## Installation testen
+## Testing the Installation
 
-1. In WordPress als registrierter Benutzer anmelden
-2. Geschützte Datei im Browser öffnen, z. B.:
-   `https://deine-domain.de/protected/group-1/example-1.pdf`
-3. Prüfen, ob ein Zugriff protokolliert wurde:
-   Die Log-Datei befindet sich unter `secure-files/logs/access.log` und ist per FTP zugänglich.
+1. Log in to WordPress as a registered user
+2. Open a protected file in the browser, e.g.:
+   `https://your-domain.com/protected/group-1/example-1.pdf`
+3. Check whether access was logged:
+   The log file is located at `secure-files/logs/access.log` and can be accessed via FTP.
 
-## Fehlerbehebung
+## Troubleshooting
 
 **"Undefined constant MIN_MEMORY_LIMIT"**
 
-- Wird `secure-config.php` korrekt eingebunden?
-- Ist der Pfad zur Datei korrekt angegeben?
-- Ist die Datei vorhanden und lesbar?
+- Is `secure-config.php` included properly?
+- Is the file path specified correctly?
+- Is the file present and readable?
 
-**"WordPress nicht gefunden"**
+**"WordPress not found"**
 
-- Pfadangabe in `secure-config.php` prüfen
-- Existiert `wp-load.php` am angegebenen Ort?
-- Berechtigungen korrekt gesetzt?
+- Check the path in `secure-config.php`
+- Is `wp-load.php` located at the specified location?
+- Are permissions set correctly?
 
-**"Konfigurationsdatei nicht gefunden"**
+**"Configuration file not found"**
 
-- Liegt `secure-files` außerhalb des WebRoots?
-- Ist die Verzeichnisstruktur korrekt eingerichtet?
-- Leserechte vorhanden?
+- Is `secure-files` located outside the WebRoot?
+- Is the directory structure set up correctly?
+- Are read permissions in place?
 
-**Zur Fehleranalyse sollte die Datei `secure-files/logs/access.log` geprüft werden.** Sie ist über FTP zugänglich und enthält Informationen über Zugriffsversuche.
+**To diagnose errors, check the file `secure-files/logs/access.log`.**  
+It is accessible via FTP and contains information on access attempts.
 
-**Weitere mögliche Fehler** findest du in der Datei **[Fehlerbehebung](troubleshooting.md)**.
+**More potential errors** are documented in the file **[Troubleshooting](troubleshooting.md)**.
 
-## Sicherheitshinweise
+## Security Notes
 
-- **Verzeichnisstruktur:**
-  Das Verzeichnis `secure-files` muss außerhalb des WebRoots liegen.
-  Nur das Verzeichnis `protected` darf öffentlich erreichbar sein.
+- **Directory structure:**  
+  The `secure-files` directory must be placed outside the WebRoot.  
+  Only the `protected` directory should be publicly accessible.
 
-- **Dateiberechtigungen:**
-  Verwende minimale Rechte. Berechtigungen regelmäßig überprüfen.
+- **File permissions:**  
+  Use minimal permissions. Review and adjust them regularly.
 
-- **Debug-Modus:**
-  Nur in Entwicklungsumgebungen aktivieren. In Produktivsystemen deaktivieren.
+- **Debug mode:**  
+  Enable only in development environments. Disable in production.
 
-- **Systempflege:**
-  WordPress und PHP aktuell halten. Serverkonfiguration und Sicherheits-Header regelmäßig prüfen.
+- **System maintenance:**  
+  Keep WordPress and PHP up to date. Regularly review server configuration and security headers.
 
-**Weitere sicherheitsrelevante Hinweise** findest du in der Datei **[Sicherheitsrichtlinien](security.md)**.
+**More security-related guidance** can be found in the file **[Security Policies](security.md)**.
