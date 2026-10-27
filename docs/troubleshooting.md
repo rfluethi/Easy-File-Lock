@@ -13,7 +13,7 @@ This guide assists administrators and developers in diagnosing and resolving com
 1. Open `secure-config.php` and check the role mappings:
 
    ```php
-   $role_mappings = [
+   $role_folders = [
        'subscriber' => 'group-1',
        'contributor' => 'group-2'
    ];
@@ -73,6 +73,44 @@ This guide assists administrators and developers in diagnosing and resolving com
    ];
    ```
 3. Ensure the file and role match appropriately.
+
+### Error 400 – Invalid Filename
+
+**Possible causes:**
+
+* The requested path contains a forbidden character
+* A path component starts with a dot (e.g. `.env`, `.htaccess`, `.git`)
+
+Each component of the URL path is validated against the pattern `^[A-Za-z0-9_-][A-Za-z0-9._-]*$`. The first character of every component must not be a dot.
+
+**Solutions:**
+
+1. Verify the URL — only ASCII letters, digits, underscore, hyphen, and dot are allowed.
+2. The first character of every path segment must be a letter or digit, not a dot.
+3. Check for invisible characters or URL-encoding issues in the link.
+
+### Error 415 – Unsupported File Type
+
+**Possible causes:**
+
+* The file extension is not present in `$allowed_mime_types` in `secure-config.php`
+* The system does **not** fall back to `application/octet-stream` — extensions outside the whitelist are rejected outright
+
+**Solutions:**
+
+1. Add the extension and its MIME type to `$allowed_mime_types` in `secure-config.php`:
+
+   ```php
+   $allowed_mime_types = [
+       'pdf'  => 'application/pdf',
+       'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+       // add your extension here:
+       'txt'  => 'text/plain',
+   ];
+   ```
+
+2. Alternatively, rename the file to a whitelisted extension.
+3. Find the correct MIME type string at [MDN Web Docs – Common MIME types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types/Common_types).
 
 ### Infinite Redirect (Loop)
 
@@ -191,9 +229,10 @@ This guide assists administrators and developers in diagnosing and resolving com
 ## Quick Checklist: Access Errors
 
 * [ ] Is the user logged in?
-* [ ] Is the role configured correctly?
+* [ ] Is the role configured correctly in `$role_folders`? (or user ID in `$user_folders`?)
 * [ ] Is the file in the correct group folder?
-* [ ] Is the MIME type allowed?
+* [ ] Does the filename start with a letter or digit (no leading dot)?
+* [ ] Is the file extension listed in `$allowed_mime_types`? (missing extension → HTTP 415)
 * [ ] Are permissions set correctly?
 * [ ] Is access being logged in `access.log`?
 

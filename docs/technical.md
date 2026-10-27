@@ -30,8 +30,12 @@ secure-files/                  # Outside WebRoot (not publicly accessible)
 
 ### Access Control
 
-* **Administrators**: Have full access to all protected files in all directories
-* **Role-based Access**: Other users can only access files in their assigned group directories
+Access is checked in three steps (highest priority first):
+
+1. **Administrator role** — full access to all files in all directories, regardless of any mapping.
+2. **User-specific mapping** (`$user_folders`) — if the WordPress user ID has an entry, only that folder is accessible. Role-based access is not applied as a fallback.
+3. **Role-based mapping** (`$role_folders`) — access based on the WordPress role. A role can be mapped to a single folder (string) or multiple folders (array).
+
 * **Example URLs**:
   - Access for Subscriber: `/protected/group-1/example-1.pdf`
   - Access for Contributor: `/protected/group-2/example-2.pdf`
@@ -77,6 +81,7 @@ The `.htaccess` file manages access control using server-side rewrite rules.
 **Protect access script**
 
 ```apache
+RewriteCond %{THE_REQUEST} \s/+protected/check-access\.php(?:[\s?]|$) [NC]
 RewriteRule ^check-access\.php$ - [F,L]
 ```
 
@@ -152,10 +157,26 @@ require_once $config_file;
 
 #### Memory Check
 
+`intval()` alone is incorrect for PHP shorthand values: `intval('1G') === 1`, which is far less than the 128 MB default. `efl_to_bytes()` converts shorthands correctly.
+
 ```php
-$memory_limit = ini_get('memory_limit');
-if (intval($memory_limit) < intval(MIN_MEMORY_LIMIT)) {
-    die('PHP memory limit too low.');
+function efl_to_bytes($value) {
+    $value = trim((string) $value);
+    if ($value === '' || $value === '-1') {
+        return PHP_INT_MAX;
+    }
+    $unit = strtolower(substr($value, -1));
+    $num  = (int) $value;
+    switch ($unit) {
+        case 'g': return $num * 1024 * 1024 * 1024;
+        case 'm': return $num * 1024 * 1024;
+        case 'k': return $num * 1024;
+        default:  return (int) $value;
+    }
+}
+
+if (efl_to_bytes(ini_get('memory_limit')) < efl_to_bytes(MIN_MEMORY_LIMIT)) {
+    die('PHP memory limit too low. Minimum required: ' . MIN_MEMORY_LIMIT);
 }
 ```
 
@@ -187,6 +208,8 @@ if (!defined('SECURE_FILE_PATH')) {
 
 #### Logging System
 
+The `umask` is set before `touch()` to close the brief window where the file could exist with group- or world-write permissions before `chmod()` runs. The `efl_log()` function writes the log entry and falls back to `error_log()` on write failure so access events are never silently dropped.
+
 ```php
 if (!is_dir(LOG_DIR)) {
     if (!mkdir(LOG_DIR, 0755, true)) {
@@ -194,11 +217,49 @@ if (!is_dir(LOG_DIR)) {
     }
 }
 if (!file_exists(LOG_FILE)) {
-    if (!touch(LOG_FILE)) {
+    $prev_umask = umask(0133); // results in 0644 at creation
+    $created = touch(LOG_FILE);
+    umask($prev_umask);
+    if (!$created) {
         die('Could not create log file');
     }
     chmod(LOG_FILE, 0644);
 }
+
+/**
+ * Append a line to the access log.
+ * - level 'access' is always written (audit trail independent of DEBUG_MODE)
+ * - level 'debug'  is only written when DEBUG_MODE is true
+ * Falls back to error_log() if the file cannot be written.
+ */
+function efl_log($level, $message) {
+    if ($level === 'debug' && !DEBUG_MODE) {
+        return;
+    }
+    $user_id = function_exists('wp_get_current_user') && wp_get_current_user()->ID
+        ? (int) wp_get_current_user()->ID
+        : '-';
+    $line = sprintf(
+        "[%s] [%s] [user=%s] [ip=%s] %s%s",
+        date('c'),
+        strtoupper($level),
+        $user_id,
+        efl_anonymize_ip($_SERVER['REMOTE_ADDR'] ?? ''),
+        $message,
+        PHP_EOL
+    );
+    $written = @file_put_contents(LOG_FILE, $line, FILE_APPEND);
+    if ($written === false && $level === 'access') {
+        error_log('efl_log: failed to write access log entry: ' . trim($line));
+    }
+}
+```
+
+Example log entries:
+
+```
+[2026-04-28T10:15:00+02:00] [ACCESS] [user=5] [ip=1.2.3.xxx] ALLOW 200 file=group-1/report.pdf
+[2026-04-28T10:16:00+02:00] [ACCESS] [user=3] [ip=1.2.3.xxx] DENY 403 file=group-2/intern.pdf roles=subscriber
 ```
 
 #### Log Rotation
@@ -228,9 +289,11 @@ if (!is_user_logged_in()) {
 
 #### File Name Validation
 
+The previous blacklist approach (`str_replace(['..', './', '\\'], '')`) was non-idempotent and fragile. The current implementation strips the leading slash, then validates every path component individually against a whitelist regex. The first character of each component must not be a dot, so dotfiles (`.env`, `.htaccess`, `.git`) are rejected before the MIME check even runs.
+
 ```php
 $rel = $_GET['file'] ?? '';
-$rel = ltrim(str_replace(['..', './', '\\'], '', $rel), '/');
+$rel = ltrim((string) $rel, '/');
 if ($rel === '' || substr($rel, -1) === '/') {
     $rel .= 'index.html';
 }
@@ -238,40 +301,110 @@ if ($rel === '' || substr($rel, -1) === '/') {
 
 #### Security Check
 
+The regex requires the first character to be a letter or digit (`[A-Za-z0-9_-]`), preventing dotfiles from passing validation.
+
 ```php
-if (!preg_match('/^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/', $rel)) {
-    status_header(400);
-    exit('Invalid filename');
+// Component whitelist: every path component must validate strictly.
+$parts = explode('/', $rel);
+foreach ($parts as $p) {
+    if ($p === '' || $p === '.' || $p === '..' || !preg_match('/^[A-Za-z0-9_-][A-Za-z0-9._-]*$/', $p)) {
+        efl_log('access', "DENY 400 file=$rel reason=invalid_component");
+        status_header(400);
+        exit('Invalid filename');
+    }
 }
 ```
 
 #### Role Check
 
+Access is checked in three steps. The `$role_folders` value can be a string (single folder) or an array (multiple folders) — both are normalised to an array internally so the comparison logic is uniform.
+
 ```php
-$roles = $current->roles;
+$normalize_key = static function ($value) {
+    $value = strtolower((string)$value);
+    $value = preg_replace('/[^a-z0-9]+/', '-', $value);
+    return trim($value, '-');
+};
+
+// Normalise $role_folders: string or array → always array of non-empty strings.
+$normalized_role_folders = [];
+foreach ($role_folders as $role_key => $folder) {
+    $normalized_role = $normalize_key($role_key);
+    if ($normalized_role === '') { continue; }
+    $folders = is_array($folder) ? $folder : [$folder];
+    $clean = [];
+    foreach ($folders as $f) {
+        if (is_string($f) && $f !== '') { $clean[] = ltrim($f, '/'); }
+    }
+    if (!empty($clean)) { $normalized_role_folders[$normalized_role] = $clean; }
+}
+
+$roles = is_array($current->roles) ? $current->roles : [];
+if (empty($roles) && isset($current->caps) && is_array($current->caps)) {
+    $roles = array_keys(array_filter($current->caps));
+}
+
 $allowed = false;
+$user_id = (int) $current->ID;
+
+// Step 1: Administrator — always full access.
+// Strict literal comparison prevents custom roles whose slug normalises to
+// 'administrator' from gaining unintended access.
 foreach ($roles as $role) {
     if ($role === 'administrator') {
         $allowed = true;
         break;
     }
-    if (isset($role_folders[$role])) {
-        if (str_starts_with($rel, $role_folders[$role] . '/')) {
-            $allowed = true;
-            break;
+}
+
+// Step 2: User-specific mapping — takes priority over role mapping.
+// If the user ID is listed in $user_folders, ONLY that folder is accessible;
+// there is no fallback to the role mapping.
+if (!$allowed && isset($user_folders[$user_id])) {
+    $allowed_folder = ltrim((string) $user_folders[$user_id], '/');
+    if ($rel === $allowed_folder || strpos($rel, $allowed_folder . '/') === 0) {
+        $allowed = true;
+    } else {
+        efl_log('access', "DENY 403 file=$rel reason=outside_user_folder user_id=$user_id");
+        status_header(403);
+        exit('Forbidden');
+    }
+}
+
+// Step 3: Role-based mapping — only reached if no user-specific entry exists.
+if (!$allowed) {
+    foreach ($roles as $role) {
+        $normalized_user_role = $normalize_key($role);
+        if (isset($normalized_role_folders[$normalized_user_role])) {
+            foreach ($normalized_role_folders[$normalized_user_role] as $allowed_folder) {
+                if ($rel === $allowed_folder || strpos($rel, $allowed_folder . '/') === 0) {
+                    $allowed = true;
+                    break 2;
+                }
+            }
         }
     }
+}
+
+if (!$allowed) {
+    efl_log('access', "DENY 403 file=$rel roles=" . implode(',', $roles));
+    status_header(403);
+    exit('Forbidden');
 }
 ```
 
 #### File Validation
 
+`realpath()` on the secure root is called once to resolve any symlinks or platform path differences. The containment check uses `strpos` with `DIRECTORY_SEPARATOR` appended to the root, which prevents a path like `/secure-files-extra/…` from matching a root of `/secure-files`.
+
 ```php
+$secure_root = realpath(SECURE_FILE_PATH);
 $abs = realpath(SECURE_FILE_PATH . '/' . $rel);
 if (
+    $secure_root === false ||
     $abs === false ||
     !is_file($abs) ||
-    strncmp($abs, SECURE_FILE_PATH, strlen(SECURE_FILE_PATH)) !== 0
+    strpos($abs, $secure_root . DIRECTORY_SEPARATOR) !== 0
 ) {
     status_header(404);
     exit('not found');
@@ -290,16 +423,67 @@ if ($size === false || $size > MAX_FILE_SIZE) {
 
 #### MIME Type and Headers
 
+The previous fallback to `application/octet-stream` would silently serve files with unlisted extensions (e.g. `.env`, `.bak`, `.sql`) with HTTP 200. The current code hard-rejects any extension not in the whitelist. Security headers are sent on every response, including denials.
+
 ```php
 $ext = strtolower(pathinfo($abs, PATHINFO_EXTENSION));
-$mime = $allowed_mime_types[$ext] ?? 'application/octet-stream';
+if (!isset($allowed_mime_types[$ext])) {
+    efl_log('access', "DENY 415 file=$rel reason=ext_not_whitelisted");
+    status_header(415);
+    exit('Unsupported file type');
+}
+$mime = $allowed_mime_types[$ext];
+
 header("Content-Type: $mime");
 header('Cache-Control: ' . CACHE_CONTROL);
 foreach (SECURITY_HEADERS as $header) {
     header($header);
 }
+// Per-extension CSP overrides the default Content-Security-Policy for HTML and SVG.
+if (isset($csp_per_extension[$ext])) {
+    header('Content-Security-Policy: ' . $csp_per_extension[$ext]);
+}
+// Prevent cross-site embedding (image, script, link) which could be used to
+// detect whether a file exists via onload/onerror timing.
+header('Cross-Origin-Resource-Policy: same-origin');
 header("Content-Length: $size");
 ```
+
+#### Per-Extension Content Security Policy
+
+`$csp_per_extension` in `secure-config.php` lets you override the default `Content-Security-Policy` header for specific file types. SVG receives a strict sandbox so inline scripts cannot run; HTML retains the permissive policy needed for Reveal.js slide decks:
+
+```php
+$csp_per_extension = [
+    'html' => "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; frame-src 'self'; connect-src 'self'; worker-src 'self' blob:;",
+    'svg'  => "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:;",
+];
+```
+
+If an extension is not listed in `$csp_per_extension`, the default CSP from `SECURITY_HEADERS` applies unchanged.
+
+#### IP Anonymisation
+
+All log entries pass the client IP through `efl_anonymize_ip()` before writing. This is applied unconditionally — not only in debug mode — to keep the log GDPR-compliant from the first request.
+
+```php
+function efl_anonymize_ip($ip) {
+    $ip = trim((string) $ip);
+    if ($ip === '') { return '-'; }
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+        return substr($ip, 0, strrpos($ip, '.')) . '.xxx';
+    }
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+        $bin = inet_pton($ip);
+        if ($bin === false) { return '-'; }
+        $masked = substr($bin, 0, 8) . str_repeat("\x00", 8);
+        return inet_ntop($masked);
+    }
+    return '-';
+}
+```
+
+Result: `192.168.1.123` → `192.168.1.xxx`; `2001:db8::1` → `2001:db8::`.
 
 #### File Delivery
 
@@ -496,14 +680,19 @@ The system implements several security measures:
 
 1. **Filename Validation**
    ```php
-   if (!preg_match('/^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/', $rel)) {
-       status_header(400);
-       exit('Invalid filename');
+   $parts = explode('/', $rel);
+   foreach ($parts as $p) {
+       if ($p === '' || $p === '.' || $p === '..' || !preg_match('/^[A-Za-z0-9_-][A-Za-z0-9._-]*$/', $p)) {
+           efl_log('access', "DENY 400 file=$rel reason=invalid_component");
+           status_header(400);
+           exit('Invalid filename');
+       }
    }
    ```
-   - Prevents directory traversal attacks
-   - Allows only safe characters
-   - Blocks path manipulations
+   - Validates every path component individually (component whitelist)
+   - First character must be a letter or digit — dotfiles (`.env`, `.htaccess`) are blocked
+   - Blocks directory traversal and path manipulations
+   - Supports arbitrary nesting depth
 
 2. **Security Headers**
    ```php
@@ -561,23 +750,43 @@ The system can be configured to run on different web servers. Below are the spec
    ```
 
 2. **.htaccess Configuration**
+
+   The `.htaccess` uses a fail-closed approach: if `mod_rewrite` is not available, all access is denied. Dotfiles are blocked by a `FilesMatch` directive. `Options -Indexes -ExecCGI -Includes` prevents directory listing and script execution.
+
    ```apache
-   RewriteEngine On
-   RewriteBase /protected/
-   
-   # Prevent direct access to check-access.php
-   RewriteRule ^check-access\.php$ - [F,L]
-   
-   # Handle directory requests
-   RewriteRule ^(.+/)$ /protected/check-access.php?file=$1index.html [QSA,L]
-   
-   # Handle file requests
-   RewriteRule ^(.+)$ /protected/check-access.php?file=$1 [QSA,L]
-   
-   # Security headers
-   Header set X-Content-Type-Options "nosniff"
-   Header set X-Frame-Options "DENY"
-   Header set X-XSS-Protection "1; mode=block"
+   # Block dotfiles such as .git, .env, .htaccess from being served
+   <FilesMatch "^\.">
+       Require all denied
+   </FilesMatch>
+
+   # Fail-closed: if mod_rewrite is unavailable, deny everything in this directory.
+   <IfModule !mod_rewrite.c>
+       Require all denied
+   </IfModule>
+
+   <IfModule mod_rewrite.c>
+     RewriteEngine On
+     RewriteBase /protected/
+
+     # No directory listing
+     Options -Indexes
+     # No CGI / SSI execution
+     Options -ExecCGI -Includes
+
+     # Block direct browser access to the serving script
+     RewriteCond %{THE_REQUEST} \s/+protected/check-access\.php(?:[\s?]|$) [NC]
+     RewriteRule ^check-access\.php$ - [F,L]
+
+     # Directory request => index.html
+     RewriteRule ^(.+/)$ /protected/check-access.php?file=$1index.html [QSA,L]
+
+     # Send every file request to the PHP gatekeeper
+     RewriteRule ^(.+)$ /protected/check-access.php?file=$1 [QSA,L]
+   </IfModule>
+
+   <IfModule mod_headers.c>
+     Header set Cache-Control "private, no-cache, no-store, must-revalidate"
+   </IfModule>
    ```
 
 #### Nginx Configuration
@@ -779,8 +988,7 @@ The system is primarily optimized for Apache web server, with support for Nginx 
    - `mod_headers` module enabled
    - Apache-compatible PHP configuration
 
-4. **Alternative Server Support**
-   While the system can run on Nginx and LiteSpeed, these require additional configuration:
+4. **Alternative Server Support** While the system can run on Nginx and LiteSpeed, these require additional configuration:
    - Nginx: Requires custom server block configuration
    - LiteSpeed: Compatible with Apache configurations but may need adjustments
    - Both alternatives may require additional setup for optimal performance

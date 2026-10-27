@@ -52,7 +52,7 @@ define('LOG_DIR', dirname(__DIR__) . '/logs');
 define('LOG_FILE', LOG_DIR . '/access.log');
 define('LOG_MAX_SIZE', 5 * 1024 * 1024);  // 5 MB
 define('LOG_MAX_FILES', 5);               // Max. 5 log files
-define('DEBUG_MODE', true);               // Enable debug output
+define('DEBUG_MODE', false);              // Must be false in production. Set to true only for short-term troubleshooting.
 ```
 
 **Explanation:**
@@ -73,7 +73,7 @@ define('SECURITY_HEADERS', [
     'X-Frame-Options: DENY',
     'X-XSS-Protection: 1; mode=block',
     'Referrer-Policy: strict-origin-when-cross-origin',
-    'Content-Security-Policy: default-src 'self'',
+    'Content-Security-Policy: default-src \'self\'',
     'Strict-Transport-Security: max-age=31536000; includeSubDomains'
 ]);
 ```
@@ -87,15 +87,34 @@ define('SECURITY_HEADERS', [
 
 ```php
 $role_folders = [
-    'subscriber'  => 'group-1',
-    'contributor' => 'group-1',
-    'author'      => 'group-2'
+    'subscriber'  => 'group-1',              // single folder
+    'contributor' => 'group-2',              // single folder
+    // 'editor'   => ['group-1', 'group-3'], // multiple folders as array
 ];
 ```
 
-* Roles like `subscriber` and `contributor` have access to the `group-1` directory.
-* `author` has access to `group-2`.
-* If multiple roles should access the same directory, assign the same target folder accordingly.
+* `subscriber` has access to the `group-1` directory.
+* `contributor` has access to `group-2`.
+* A role can be mapped to a **single folder** (string) or **multiple folders** (array). Both syntaxes are valid and can be mixed within the same configuration.
+* If multiple roles should access the same directory, assign the same target folder to each role.
+
+## User-Based Directory Access
+
+Individual users can be mapped to a folder by WordPress user ID. This takes priority over role-based access — if a user ID is listed in `$user_folders`, **only** that folder is accessible (the role mapping is not applied as a fallback).
+
+```php
+$user_folders = [
+    42 => 'client-john',   // User with ID 42 may access /client-john
+    99 => 'client-jane',   // User with ID 99 may access /client-jane
+];
+```
+
+**How to find a user's ID:** In the WordPress admin go to Users → All Users and hover over a username. The URL shown in the browser status bar contains `?user_id=42`.
+
+**Access priority (highest to lowest):**
+1. Administrator role → full access to all files.
+2. Entry in `$user_folders` → access to the specified folder only (exclusive).
+3. Entry in `$role_folders` → access based on WordPress role.
 
 ## Allowed MIME Types for Downloads
 

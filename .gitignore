@@ -21,3 +21,17 @@ secure-files/logs/*.log
 *.cache
 *.tmp
 *.temp
+
+# Backup / scratch
+*.bak
+*~
+
+# Compressed releases (built by GitHub Actions)
+/protected.zip
+/secure-files.zip
+
+# Local development
+.php-version
+.phpunit.cache/
+composer.lock
+vendor/

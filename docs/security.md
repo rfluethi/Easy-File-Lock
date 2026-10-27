@@ -72,20 +72,42 @@ The following measures aim to prevent:
 
 1. **.htaccess Rules**
 
+   The `protected/.htaccess` file contains a fail-closed block that denies all access if `mod_rewrite` is not loaded — there is no silent fallback that would expose files directly.
+
    ```apache
-   # Disable PHP execution
-   <FilesMatch "\.php$">
-       Order Allow,Deny
-       Deny from all
+   # Block dotfiles (.git, .env, .htaccess) from being served
+   <FilesMatch "^\.">
+       Require all denied
    </FilesMatch>
 
-   # Disable directory listing
-   Options -Indexes
+   # Fail-closed: if mod_rewrite is unavailable, deny everything.
+   <IfModule !mod_rewrite.c>
+       Require all denied
+   </IfModule>
 
-   # Redirect to check-access.php
-   RewriteEngine On
-   RewriteCond %{REQUEST_FILENAME} -f
-   RewriteRule ^(.*)$ check-access.php?file=$1 [L,QSA]
+   <IfModule mod_rewrite.c>
+     RewriteEngine On
+     RewriteBase /protected/
+
+     # No directory listing
+     Options -Indexes
+     # No CGI / SSI execution
+     Options -ExecCGI -Includes
+
+     # Block direct browser access to the serving script
+     RewriteCond %{THE_REQUEST} \s/+protected/check-access\.php(?:[\s?]|$) [NC]
+     RewriteRule ^check-access\.php$ - [F,L]
+
+     # Directory request → index.html
+     RewriteRule ^(.+/)$ /protected/check-access.php?file=$1index.html [QSA,L]
+
+     # Route every file request through the PHP gatekeeper
+     RewriteRule ^(.+)$ /protected/check-access.php?file=$1 [QSA,L]
+   </IfModule>
+
+   <IfModule mod_headers.c>
+     Header set Cache-Control "private, no-cache, no-store, must-revalidate"
+   </IfModule>
    ```
 
 2. **PHP Configuration**
@@ -94,10 +116,15 @@ The following measures aim to prevent:
    * `log_errors = On`
    * `error_reporting = E_ALL`
 
-3. **Rate Limiting and Abuse Protection (optional)**
+3. **Rate Limiting and Abuse Protection (recommended)**
 
-   * IP-based request limits via middleware or web server (mod_evasive, Nginx limits)
-   * Access counters per IP using session context or Redis
+   Easy File Lock itself does not implement rate limiting — enforce it at the web server or network layer:
+
+   * Apache: `mod_evasive` or `mod_ratelimit`
+   * Nginx: `limit_req_zone` / `limit_req`
+   * Cloud/WAF: Cloudflare Rate Limiting, AWS WAF, etc.
+
+   Without server-level rate limiting, the PHP gatekeeper (and WordPress bootstrap) will execute on every unauthenticated request.
 
 ### Application Security
 
@@ -109,7 +136,8 @@ The following measures aim to prevent:
 
 2. **Access Control**
 
-   * Role-based permissions
+   * Role-based permissions via `$role_folders`
+   * User-based permissions via `$user_folders` (takes priority over role mapping)
    * Folder-based restrictions
    * No role escalation
 
@@ -119,11 +147,33 @@ The following measures aim to prevent:
    * File size restrictions
    * Chunked downloads
 
+### CSP Sandbox for HTML and SVG
+
+HTML and SVG responses are served with `Content-Security-Policy: sandbox …`. This disables script execution in the rendered document and treats it as a unique origin, so embedded code cannot read WordPress cookies or call `wp-admin` endpoints with credentials.
+
+If a specific HTML deliverable must run its own JavaScript, extend the sandbox token list in `secure-config.php`:
+
+```php
+$csp_per_extension['html'] =
+    "sandbox allow-forms allow-popups allow-scripts; "
+    . "default-src 'self'; img-src 'self' data:; "
+    . "style-src 'self' 'unsafe-inline'; font-src 'self' data:; "
+    . "script-src 'self'; object-src 'none'; base-uri 'none';";
+```
+
+`allow-same-origin` is intentionally absent from the default — adding it re-exposes the WordPress origin to anything the HTML file ships.
+
+### Cross-Site Embedding and SameSite Cookies
+
+Every file response includes `Cross-Origin-Resource-Policy: same-origin`, which prevents browsers from completing cross-site loads via `<img>`, `<script>`, or `<link>`. This removes a low-severity information-disclosure vector where an attacker could probe file existence by observing `onload`/ `onerror` events.
+
+For full protection, ensure WordPress authentication cookies carry `SameSite=Lax` (the default since WordPress 5.7) or `SameSite=Strict`. Verify your cookie flags with browser DevTools or `curl -I`.
+
 ### Data Protection & Logging
 
-* No storage of IP addresses or personal data without legal basis
-* Log file access restricted to authorized administrators
-* Automate deletion of old logs (e.g., after 30 days)
+* IP addresses are anonymised before logging: IPv4 last octet replaced with `xxx`, IPv6 last 64 bits zeroed (via `efl_anonymize_ip()`). No full IP addresses are stored.
+* Log file access restricted to authorized administrators (stored outside WebRoot)
+* Define a retention policy and automate deletion of old logs (e.g., after 30 days via cron)
 
 ## Best Practices
 

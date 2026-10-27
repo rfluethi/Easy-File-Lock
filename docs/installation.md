@@ -2,8 +2,7 @@
 
 ## Overview
 
-This guide provides a step-by-step walkthrough for installing and setting up a role-based file sharing system using WordPress.  
-It is intended for technically proficient users with access to the server's file system and a basic understanding of WordPress and PHP.
+This guide provides a step-by-step walkthrough for installing and setting up a role-based file sharing system using WordPress. It is intended for technically proficient users with access to the server's file system and a basic understanding of WordPress and PHP.
 
 ## Quick Start
 
@@ -17,8 +16,7 @@ It is intended for technically proficient users with access to the server's file
    - Copy the contents of `protected.zip` into the **WebRoot directory**
    - Place the contents of `secure-files.zip` in a directory **outside the WebRoot**
 
-   **What is the WebRoot directory?**  
-   The WebRoot is the publicly accessible root directory of your web server – e.g., `htdocs`, `www`, `html`, or `public_html`. Files outside this directory are not directly accessible via a browser.
+   **What is the WebRoot directory?** The WebRoot is the publicly accessible root directory of your web server – e.g., `htdocs`, `www`, `html`, or `public_html`. Files outside this directory are not directly accessible via a browser.
 
 3. **Modify WordPress Configuration**
 
@@ -106,7 +104,16 @@ define('LOG_FILE', LOG_DIR . '/access.log');
 // Role assignment
 $role_folders = [
     'subscriber'  => 'group-1',
-    'contributor' => 'group-2'
+    'contributor' => 'group-2',
+    // 'editor'   => ['group-1', 'group-3'], // optional: multiple folders per role
+];
+
+// Optional: per-user folder mapping by WordPress user ID.
+// Takes priority over role mapping; access is exclusive (no role fallback).
+// Find a user's ID in the WordPress admin under Users by hovering over the username:
+// it appears in the URL as "?user_id=42".
+$user_folders = [
+    // 42 => 'client-john',
 ];
 
 // Download settings
@@ -115,13 +122,13 @@ define('CHUNK_SIZE', 4194304);               // 4 MB
 define('MIN_MEMORY_LIMIT', '128M');
 ```
 
+For the full reference of all configuration options — including per-user access, MIME types, and security headers — see [docs/configuration.md](configuration.md).
+
 ## Testing the Installation
 
 1. Log in to WordPress as a registered user
-2. Open a protected file in the browser, e.g.:
-   `https://your-domain.com/protected/group-1/example-1.pdf`
-3. Check whether access was logged:
-   The log file is located at `secure-files/logs/access.log` and can be accessed via FTP.
+2. Open a protected file in the browser, e.g.: `https://your-domain.com/protected/group-1/example-1.pdf`
+3. Check whether access was logged: The log file is located at `secure-files/logs/access.log` and can be accessed via FTP.
 
 ## Troubleshooting
 
@@ -143,24 +150,20 @@ define('MIN_MEMORY_LIMIT', '128M');
 - Is the directory structure set up correctly?
 - Are read permissions in place?
 
-**To diagnose errors, check the file `secure-files/logs/access.log`.**  
-It is accessible via FTP and contains information on access attempts.
+**To diagnose errors, check the file `secure-files/logs/access.log`.** It is accessible via FTP and contains information on access attempts.
 
 **More potential errors** are documented in the file **[Troubleshooting](troubleshooting.md)**.
 
 ## Security Notes
 
-- **Directory structure:**  
-  The `secure-files` directory must be placed outside the WebRoot.  
-  Only the `protected` directory should be publicly accessible.
+- **Directory structure:** The `secure-files` directory must be placed outside the WebRoot. Only the `protected` directory should be publicly accessible.
 
-- **File permissions:**  
-  Use minimal permissions. Review and adjust them regularly.
+- **File permissions:** Use minimal permissions. Review and adjust them regularly.
 
-- **Debug mode:**  
-  Enable only in development environments. Disable in production.
+- **Debug mode:** Enable only in development environments. Disable in production.
 
-- **System maintenance:**  
-  Keep WordPress and PHP up to date. Regularly review server configuration and security headers.
+  > **Important:** Keep `DEBUG_MODE` set to `false` in production. Verbose error output may disclose absolute filesystem paths.
+
+- **System maintenance:** Keep WordPress and PHP up to date. Regularly review server configuration and security headers.
 
 **More security-related guidance** can be found in the file **[Security Policies](security.md)**.

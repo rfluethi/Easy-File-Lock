@@ -1,11 +1,28 @@
 # -------------------------------
 # .htaccess  (protected folder)
 # -------------------------------
+
+# Block dotfiles such as .git, .env, .htaccess from being served
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Fail-closed: if mod_rewrite is unavailable, deny everything in this directory.
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /protected/
 
-  # block direct access to serving script
+  # No directory listing
+  Options -Indexes
+  # No CGI / SSI execution
+  Options -ExecCGI -Includes
+
+  # block only direct browser access to serving script
+  RewriteCond %{THE_REQUEST} \s/+protected/check-access\.php(?:[\s?]|$) [NC]
   RewriteRule ^check-access\.php$ - [F,L]
 
   # directory request => index.html

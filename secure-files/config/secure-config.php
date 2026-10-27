@@ -23,9 +23,26 @@ define('LOG_MAX_FILES', 5);                                     // Maximum numbe
 // Role-to-folder mapping
 // Maps WordPress user roles to specific directories for file access.
 // Only users with the matching role can access the contents of the corresponding folder.
+// A role can be mapped to a single folder (string) or multiple folders (array).
 $role_folders = [
-    'subscriber' => 'group-1',    // Subscribers can access files in /group-1
-    'contributor' => 'group-2'    // Contributors can access files in /group-2
+    'subscriber'  => 'group-1',              // Subscribers can access files in /group-1
+    'contributor' => 'group-2',              // Contributors can access files in /group-2
+    // 'editor'   => ['group-1', 'group-3'], // Editors can access both /group-1 and /group-3
+];
+
+// User-to-folder mapping (optional — takes priority over role mapping)
+// Use the WordPress user ID (integer) as the key. The user ID can be found in
+// the WordPress admin under Users → All Users by hovering over a username:
+// it appears in the URL as "?user_id=42".
+//
+// Rules:
+//   - If a user ID is listed here, ONLY the specified folder is accessible.
+//     Role-based access is NOT applied as a fallback — the mapping is exclusive.
+//   - Administrators always have full access regardless of this list.
+//   - Remove the comment slashes to activate an entry.
+$user_folders = [
+    // 42 => 'client-john',   // User with ID 42 may access /client-john
+    // 99 => 'client-jane',   // User with ID 99 may access /client-jane
 ];
 
 // Download configuration
@@ -59,6 +76,18 @@ $allowed_mime_types = [
     '7z'   => 'application/x-7z-compressed'
 ];
 
+/**
+ * Per-extension Content-Security-Policy.
+ * If an extension is listed here, this CSP overrides the default one from
+ * SECURITY_HEADERS for the response. The 'sandbox' directive isolates the
+ * document into its own opaque origin so embedded scripts cannot access
+ * cookies of the WordPress origin.
+ */
+$csp_per_extension = [
+    'html' => "sandbox allow-forms allow-popups; default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'; object-src 'none'; base-uri 'none';",
+    'svg'  => "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:;",
+];
+
 // Cache control policy
 // Prevents client-side and proxy caching to ensure access is always verified server-side.
 define('CACHE_CONTROL', 'private, no-cache, no-store, must-revalidate');
@@ -76,4 +105,4 @@ define('SECURITY_HEADERS', [
 
 // Debug mode (for development only)
 // Enables verbose error output and extensive logging; should be disabled in production.
-define('DEBUG_MODE', true);
+define('DEBUG_MODE', false);  // Must be false in production. Set to true only for short-term troubleshooting.

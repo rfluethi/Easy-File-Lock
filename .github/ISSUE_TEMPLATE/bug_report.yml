@@ -1,0 +1,45 @@
+name: Bug report
+description: Report a defect in Easy File Lock
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Easy File Lock version
+      placeholder: v1.1.0
+    validations:
+      required: true
+  - type: input
+    id: php
+    attributes:
+      label: PHP version
+    validations:
+      required: true
+  - type: input
+    id: wp
+    attributes:
+      label: WordPress version
+    validations:
+      required: true
+  - type: dropdown
+    id: webserver
+    attributes:
+      label: Web server
+      options: [Apache, Nginx, LiteSpeed, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Configure $role_folders as ...
+        2. Visit /protected/...
+        3. Observed: 404 / 403 / ...
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Relevant access.log excerpt
+      render: text
